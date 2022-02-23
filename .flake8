@@ -6,4 +6,4 @@ exclude =
     __pycache__,
     scratch_*.py,
     build,
-    dist,
+    dist

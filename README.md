@@ -4,8 +4,13 @@ Pure Python library for IBLRIGs. Additional requirements **might** include `nump
 
 This Python package implements all file transfer and system logic for the various rig configurations.
 
-Supporting version 3.7 + for iblrig behavior PC compatibility
+Requires version 3.7+ for iblrig behavior PC compatibility
 
-Tests and flake 8 run on push or PR to develop
-
+Tests and flake 8 run on push or PR to develop.  
 Automatic PyPI release on push of tag with a "v*" prefix
+
+Development requirements:
+
+- flake8
+- black
+- pytest

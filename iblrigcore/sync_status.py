@@ -21,8 +21,9 @@ def computer_name() -> str:
     return "myPC"
 
 
-def caller(fullpath: bool = True) -> str:
+def caller_old(fullpath: bool = True) -> str:
     """returns the filename/caller of the function calling this function
+    Has to be imported as a function e.g. from iblrigcore.sync_status import caller
 
     Args:
         fullpath (bool, optional): return the full path of the module.
@@ -42,6 +43,46 @@ def caller(fullpath: bool = True) -> str:
     return short_name if not fullpath else long_name
 
 
+def caller(skip: int = 2) -> str:
+    """Get a name of a caller in the format module.class.method
+
+    Args:
+        skip (int, optional): specifies how many levels of stack to skip while getting
+            caller name. skip=1 means "who calls me", skip=2 "who calls my caller" etc.
+            Defaults to 2.
+
+    Returns:
+        str: An empty string is returned if skipped levels exceed stack height
+    """
+    stack = inspect.stack()
+    start = 0 + skip
+    if len(stack) < start + 1:
+        return ""
+    parentframe = stack[start][0]
+
+    name = []
+    module = inspect.getmodule(parentframe)
+    # module.name can be None when frame is executed directly in console
+    # TODO: consider using __main__
+    if module:
+        name.append(module.__name__)
+    # detect classname
+    if "self" in parentframe.f_locals:
+        # I don't know any way to detect call from the object method
+        # XXX: there seems to be no way to detect static method call - it will
+        #      be just a function call
+        name.append(parentframe.f_locals["self"].__class__.__name__)
+    codename = parentframe.f_code.co_name
+    if codename != "<module>":  # top level usually
+        name.append(codename)  # function or a method
+
+    ## Avoid circular refs and frame leaks
+    #  https://docs.python.org/2.7/library/inspect.html#the-interpreter-stack
+    del parentframe, stack
+
+    return ".".join(name)
+
+
 def create_status_file(session_path: Path) -> None:
     """_summary_: Creates an empty status file in the session folder just with a header.
 
@@ -53,36 +94,47 @@ def create_status_file(session_path: Path) -> None:
     if status_file.exists():
         print("status file already exists")
         return
-    header = ["Timestamp", "ComputerName", "Caller", "Status"]
+    header = ["Timestamp", "ComputerName", "Caller", "Action"]
     row = [timestamp(), computer_name(), caller(), "created_status_file"]
     with open(status_file, "w", encoding="UTF8", newline="") as f:
         writer = csv.writer(f)
-        # write the header
         writer.writerow(header)
-        # write multiple rows
         writer.writerow(row)
 
     return status_file.absolute()
 
 
-def load_status_file(session_path: Path) -> dict:
+def load_status_file(session_path: Path, header: bool = True) -> dict:
     """_summary_: Loads the status file of the session
 
     Args:
         session_path (Path): A path object of the remote session.
+        header (bool, optional): Retrun with header. Defaults to True.
 
     Returns:
         dict: Loaded status_file.json
     """
     session_path = Path(session_path)
-    status_file = session_path.joinpath("session_status.json")
+    status_file = session_path.joinpath("session_status.csv")
     if not status_file.exists():
         print("status file does not exist")
         return {}
-    with open(status_file, "r") as f:
-        return json.load(f)
+    with open(status_file, newline="") as csvfile:
+        csvreader = csv.reader(csvfile)
+        head = next(csvreader)
+        rows = []
+        for row in csvreader:
+            rows.append(row)
+    out = rows.copy()
+    if header:
+        out.insert(0, head)
+    return out
 
 
-if __name__ == "__main__":
-    create_status_file(".")
+def append_status_file(session_path: Path, action: str) -> None:
+    """Append a line to the status file of the session
 
+    Args:
+        session_path (Path): _description_
+        action (str): _description_
+    """

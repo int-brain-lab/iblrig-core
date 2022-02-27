@@ -2,10 +2,11 @@
 # @File: iblrigcore/sync_status.py
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Wednesday, February 23rd 2022, 4:21:36 pm
-from pathlib import Path
 import csv
-from datetime import datetime
 import inspect
+import socket
+from datetime import datetime
+from pathlib import Path
 
 
 def timestamp() -> str:
@@ -18,7 +19,12 @@ def timestamp() -> str:
 
 
 def computer_name() -> str:
-    return "myPC"
+    """_summary_: Returns the hostname of the computer
+
+    Returns:
+         str: host name of the computer
+    """
+    return socket.gethostname()
 
 
 def caller_old(fullpath: bool = True) -> str:

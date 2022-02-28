@@ -11,6 +11,14 @@ from iblrigcore.sync_status import caller_old, caller
 from pytest import skip
 
 
+def test_timestamp():
+    assert isinstance(sync_status.timestamp(), str)
+
+
+def test_computer_name():
+    assert isinstance(sync_status.computer_name(), str)
+
+
 def test_create_status_file():
     tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
     sync_status.create_status_file(tempdir.name)

@@ -1,5 +1,5 @@
 def test_parameter_file_locator():
-    assert True
+    assert False
 
 
 def test_parameter_file_reader():

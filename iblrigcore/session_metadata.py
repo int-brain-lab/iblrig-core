@@ -1,6 +1,31 @@
-def parameter_file_locator():
-    """Used to find parameter file"""
+import logging
+import os
+
+# configure logging
+if not os.path.isdir('C:\\Temp'):
+    os.mkdir('C:\\Temp')
+INSTALL_LOG_PATH = 'C:\\Temp\\iblrig-core.log'
+with open(INSTALL_LOG_PATH, 'w'):
     pass
+logging.basicConfig(filename=INSTALL_LOG_PATH, level=logging.DEBUG)
+
+
+def parameter_file_locator(path_to_file = "C:\\iblrig_params\\.iblrig_params.json"):
+    """
+    Used to find parameter file (C:\iblrig_params\.iblrig_params.json)
+    Parameter file initially created by iblrig install script
+
+    Returns
+    ------
+
+    """
+    file_exists = os.path.exists(path_to_file)
+    if file_exists:
+        return path_to_file
+    else:
+        # log and throw error, or find suitable defaults?
+        pass
+
 
 
 def parameter_file_reader():

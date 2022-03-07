@@ -16,8 +16,8 @@ else:
     logging.warning('Operating system not supported, exiting...')
     exit()
 
-with open(INSTALL_LOG_PATH, 'w'):
-    pass
+if not os.path.exists(INSTALL_LOG_PATH):
+    os.mknod(INSTALL_LOG_PATH)
 logging.basicConfig(filename=INSTALL_LOG_PATH, level=logging.DEBUG)
 
 
@@ -78,7 +78,8 @@ def determine_session_number(subject_folder_local="C:\\iblrig_data\\Subjects",
     return '001'  # value hardcoded just for testing
 
 
-def metadata_file_location(subject_name:str, date_directory:str, session_number:str, modality:str):
+def metadata_file_location(subject_name: str, date_directory: str, session_number: str,
+                           modality: str, server_present=False):
     """
     Used to determine where to store the metadata file.
     "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
@@ -86,15 +87,23 @@ def metadata_file_location(subject_name:str, date_directory:str, session_number:
     Parameters
     ------
     subject_name: str of name of the subject, i.e. 'test_mouse'
-    date_directory: str of date direcotry, i.e. '1900-01-01'
+    date_directory: str of date directory, i.e. '1900-01-01'
     session_number: str of current session number, i.e. '001'
     modality: str of modality in use, i.e. 'ephys'
+    server_present: bool to determine output session directly to server (Y:\\ drive)
 
     Returns
     ------
     str of the path where session_metadata.yaml will be created
     """
-    return "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
+    if server_present:
+        subjects_dir = "Y:\\Subjects"
+    else:
+        subjects_dir = "C:\\iblrig_data\\Subjects"
+    modality = "raw_"+modality+"_data"
+    metadata_file_loc = os.path.join(subjects_dir, subject_name, date_directory, session_number,
+                                     modality, "session_metadata.yaml")
+    return metadata_file_loc
 
 
 def metadata_set_subject():
@@ -188,14 +197,14 @@ if __name__ == '__main__':
     # determine_session_number((json_data['DATA_FOLDER_LOCAL']+"\\Subjects"),
     #                          (json_data['DATA_FOLDER_REMOTE']+"\\Subjects"),
     #                          mouse_name)
-    determine_session_number('/tmp/', '/remotedatafolder/', mouse_name)
+    dsn = determine_session_number('/tmp/', '/remotedatafolder/', mouse_name)
 
     # Create directories if required
     # os.makedirs(full_directory_path, exist_ok=True)
 
     # Determine location for the metadata file to be stored
     # "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
-    metadata_file_location('test_mouse', '1900-01-01', '001', 'ephys')
+    mdfl = metadata_file_location('001', '1900-01-01', '001', 'ephys', False)
 
     # Set parameters to be stored into the metadata file:
     metadata_set_subject()  # Subject : <subject_name>

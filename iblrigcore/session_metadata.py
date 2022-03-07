@@ -43,8 +43,36 @@ def parameter_file_locator(path_to_file="C:\\iblrig_params\\.iblrig_params.json"
         exit()  # or assume suitable defaults?
 
 
+def determine_session_number(data_folder_local="C:\\iblrig_data", data_folder_remote="Y:\\"):
+    """
+    Used to determine the correct session number.
+    
+    Parameters
+    ------
+
+    Returns
+    ------
+
+    """
+    if os.path.isdir(data_folder_local):
+        print('local')
+
+    if os.path.isdir(data_folder_remote):
+        print('remote')
+
+# If no remote server is configured or accessible:
+  # Crete local subject/date/number folder, determine number as we are doing currently
+  # Create raw_<modality>_data folder(s)
+  # Launch acquisition of modality
+
+    pass
+
+
 def metadata_file_location():
-    """Sets the location to store the metadata file"""
+    """
+    Used to determine where to store the metadata file.
+    Sets the location to store the metadata file
+    """
     pass
 
 
@@ -113,18 +141,24 @@ def metadata_set_python_version():
     pass  # Python_version: 3.7 | 3.8 | 3.9...
 
 
-def metadata_pip_freeze_output():
+def metadata_set_pip_freeze_output():
     pass  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’, ‘flake8 >= 3.7.8’, ...]
 
 
 if __name__ == '__main__':
-    # find the parameter file
+    # find the parameter file, verify it exists
     parameter_file_location = parameter_file_locator(path_to_file="/tmp/.iblrig_params.json")
+
     # read the content of the parameter file
     json_data = json.loads(open(parameter_file_location).read())
 
+    # Determine session number
+    # determine_session_number(json_data['DATA_FOLDER_LOCAL'], json_data['DATA_FOLDER_REMOTE'])
+    determine_session_number('/tmp/')
+
     # Determine location for the metadata file to be stored.
     metadata_file_location()
+
     # Set parameters to be stored into the metadata file:
     metadata_set_subject()  # Subject : <subject_name>
     metadata_set_date()  # Date : <date>
@@ -139,12 +173,10 @@ if __name__ == '__main__':
     metadata_set_local_data_folder()  # Local_data_folder: C:\iblrig_data\Subjects
     metadata_set_remote_data_folder()  # Remote_data_folder: Y:\Subjects
     metadata_set_python_version()  # Python_version: 3.7 | 3.8 | 3.9...
-    metadata_pip_freeze_output()  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’, ...]
+    metadata_set_pip_freeze_output()  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’, ...]
     # TODO: Create getter functions
 
     # check if metadata file already exists and contains valid data
     metadata_file_exists()
     # write data to the metadata file
     metadata_write_to_file()
-
-    

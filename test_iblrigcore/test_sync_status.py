@@ -35,6 +35,7 @@ def test_load_status_file():
     assert header in status_file
     status_file = sync_status.load_status_file(tempdir.name, header=False)
     assert header not in status_file
+    tempdir.cleanup()
 
 
 @pytest.mark.skip(reason="old caller function")
@@ -44,10 +45,6 @@ def test_caller_old():
     assert out == str(fullpath) + '/' + 'test_caller'
     out = caller_old(False)
     assert out == str(fullpath.name) + '/' + 'test_caller'
-
-# def test_get_row():
-#     action = "IdidSomething"
-#     row = get_row(action)
 
 
 def test_caller():
@@ -67,3 +64,12 @@ def test_caller_one_level_deeper():
 
     out = fake_row(2)
     assert out == ".".join([packagename, modulename, 'test_caller_one_level_deeper'])
+
+
+def test_append_status_file():
+    tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
+    sync_status.create_status_file(tempdir.name)
+    sync_status.append_status_file(tempdir.name, "IdidSomething")
+    sf_data = sync_status.load_status_file(tempdir.name)
+    assert sf_data[-1][-1] == "IdidSomething"
+    tempdir.cleanup()

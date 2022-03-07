@@ -100,7 +100,8 @@ def create_status_file(session_path: Path) -> None:
     if status_file.exists():
         print("status file already exists")
         return
-    header = ["Timestamp", "ComputerName", "Caller", "Action"]
+    header = ["Timestamp", "ComputerName", "Caller", "Modality", "Action"]
+    # e.g. [2022-02-22T22:22:22:22.222222, IBLvideo, iblrig.iblrigcore.prepare_session, videoPC, start_acquisition]
     row = [timestamp(), computer_name(), caller(), "created_status_file"]
     with open(status_file, "w", encoding="UTF8", newline="") as f:
         writer = csv.writer(f)
@@ -144,3 +145,13 @@ def append_status_file(session_path: Path, action: str) -> None:
         session_path (Path): _description_
         action (str): _description_
     """
+    session_path = Path(session_path)
+    status_file = session_path.joinpath("session_status.csv")
+    if not status_file.exists():
+        print("status file does not exist")
+        return {}
+    row = [timestamp(), computer_name(), caller(), modality(), action]
+    with open(status_file, 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(row)
+    return

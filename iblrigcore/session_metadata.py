@@ -28,7 +28,7 @@ def parameter_file_locator(path_to_file="C:\\iblrig_params\\.iblrig_params.json"
 
     Parameters
     ------
-    path_to_file: str of file location, defaults to (C:\\iblrig_params\\.iblrig_params.json)
+    path_to_file: str of file location, defaults to "C:\\iblrig_params\\.iblrig_params.json"
 
     Returns
     ------
@@ -43,37 +43,58 @@ def parameter_file_locator(path_to_file="C:\\iblrig_params\\.iblrig_params.json"
         exit()  # or assume suitable defaults?
 
 
-def determine_session_number(data_folder_local="C:\\iblrig_data", data_folder_remote="Y:\\"):
+def determine_session_number(subject_folder_local="C:\\iblrig_data\\Subjects",
+                             subject_folder_remote="Y:\\Subjects",
+                             subject_name="test_mouse"):
     """
     Used to determine the correct session number.
+    "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001"
+    TODO: flesh out function elsewhere, similar logic to path_helper in iblrig
     
     Parameters
     ------
+    subject_folder_local: str of local data folder, defaults to "C:\\iblrig_data\\Subjects"
+    subject_folder_remote: str of remote data folder, defaults to "Y:\\Subjects"
+    subject_name: str of subject name, default to "test_mouse"
 
     Returns
     ------
+    session number for the subject in a str format, i.e. '001', '002'
 
     """
-    if os.path.isdir(data_folder_local):
-        print('local')
+    local_folder_exists = os.path.isdir(subject_folder_local)
+    remote_folder_exists = os.path.isdir(subject_folder_remote)
 
-    if os.path.isdir(data_folder_remote):
-        print('remote')
+    if local_folder_exists and not remote_folder_exists:
+        # Create local subject/date/number folder,
+        subject_dir = os.path.join(subject_folder_local, subject_name)
+        if os.path.isdir(subject_dir):
+            # TODO: determine number as we are doing currently
+            pass
+        else:
+            # first recording for this subject
+            return '001'
 
-# If no remote server is configured or accessible:
-  # Crete local subject/date/number folder, determine number as we are doing currently
-  # Create raw_<modality>_data folder(s)
-  # Launch acquisition of modality
-
-    pass
+    return '001'  # value hardcoded just for testing
 
 
-def metadata_file_location():
+def metadata_file_location(subject_name:str, date_directory:str, session_number:str, modality:str):
     """
     Used to determine where to store the metadata file.
-    Sets the location to store the metadata file
+    "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
+
+    Parameters
+    ------
+    subject_name: str of name of the subject, i.e. 'test_mouse'
+    date_directory: str of date direcotry, i.e. '1900-01-01'
+    session_number: str of current session number, i.e. '001'
+    modality: str of modality in use, i.e. 'ephys'
+
+    Returns
+    ------
+    str of the path where session_metadata.yaml will be created
     """
-    pass
+    return "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
 
 
 def metadata_set_subject():
@@ -126,6 +147,14 @@ def metadata_set_server_status():
 
 
 def metadata_set_repo_hash():
+    # here = os.getcwd()
+    # os.chdir(folder)
+    # out = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+    # os.chdir(here)
+    # if not out:
+    #     log.debug("Commit hash is empty string")
+    # log.debug(f"Found commit hash {out}")
+    # return out
     pass  # Repo_hash / version: some_hash
 
 
@@ -146,18 +175,27 @@ def metadata_set_pip_freeze_output():
 
 
 if __name__ == '__main__':
-    # find the parameter file, verify it exists
-    parameter_file_location = parameter_file_locator(path_to_file="/tmp/.iblrig_params.json")
+    # Find the parameter file, verify it exists
+    parameter_file_location = parameter_file_locator("/tmp/.iblrig_params.json")
 
-    # read the content of the parameter file
+    # Read the content of the parameter file
     json_data = json.loads(open(parameter_file_location).read())
 
-    # Determine session number
-    # determine_session_number(json_data['DATA_FOLDER_LOCAL'], json_data['DATA_FOLDER_REMOTE'])
-    determine_session_number('/tmp/')
+    # Get subject name, separate function call? user prompt?
+    mouse_name = "test_mouse"
 
-    # Determine location for the metadata file to be stored.
-    metadata_file_location()
+    # Determine session number
+    # determine_session_number((json_data['DATA_FOLDER_LOCAL']+"\\Subjects"),
+    #                          (json_data['DATA_FOLDER_REMOTE']+"\\Subjects"),
+    #                          mouse_name)
+    determine_session_number('/tmp/', '/remotedatafolder/', mouse_name)
+
+    # Create directories if required
+    # os.makedirs(full_directory_path, exist_ok=True)
+
+    # Determine location for the metadata file to be stored
+    # "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
+    metadata_file_location('test_mouse', '1900-01-01', '001', 'ephys')
 
     # Set parameters to be stored into the metadata file:
     metadata_set_subject()  # Subject : <subject_name>
@@ -173,8 +211,10 @@ if __name__ == '__main__':
     metadata_set_local_data_folder()  # Local_data_folder: C:\iblrig_data\Subjects
     metadata_set_remote_data_folder()  # Remote_data_folder: Y:\Subjects
     metadata_set_python_version()  # Python_version: 3.7 | 3.8 | 3.9...
-    metadata_set_pip_freeze_output()  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’, ...]
-    # TODO: Create getter functions
+    metadata_set_pip_freeze_output()  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’]
+    # TODO:
+    #  Create getter functions
+    #  Get list of hardware and Windows patch level?
 
     # check if metadata file already exists and contains valid data
     metadata_file_exists()

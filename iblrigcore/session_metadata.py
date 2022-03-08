@@ -2,7 +2,10 @@ import json
 import logging
 import os
 
-from sys import platform, exit
+from datetime import datetime
+from subprocess import check_output
+from sys import exit, platform, version
+from traceback import print_stack
 
 # configure logging based on platform TODO: move elsewhere
 INSTALL_LOG_PATH = ''
@@ -40,6 +43,7 @@ def parameter_file_locator(path_to_file="C:\\iblrig_params\\.iblrig_params.json"
         return path_to_file
     else:
         logging.debug('Could not find the .iblrig_params.json file.')
+        print_stack()
         exit()  # or assume suitable defaults?
 
 
@@ -82,7 +86,7 @@ def metadata_file_location(subject_name: str, date_directory: str, session_numbe
                            modality: str, server_present=False):
     """
     Used to determine where to store the metadata file.
-    "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
+    "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.json"
 
     Parameters
     ------
@@ -94,7 +98,7 @@ def metadata_file_location(subject_name: str, date_directory: str, session_numbe
 
     Returns
     ------
-    str of the path where session_metadata.yaml will be created
+    str of the path where session_metadata.json will be created
     """
     if server_present:
         subjects_dir = "Y:\\Subjects"
@@ -102,130 +106,289 @@ def metadata_file_location(subject_name: str, date_directory: str, session_numbe
         subjects_dir = "C:\\iblrig_data\\Subjects"
     modality = "raw_"+modality+"_data"
     metadata_file_loc = os.path.join(subjects_dir, subject_name, date_directory, session_number,
-                                     modality, "session_metadata.yaml")
+                                     modality, "session_metadata.json")
     return metadata_file_loc
 
 
-def metadata_set_subject():
-    """Sets the subject parameter within the metadata file"""
-    pass
+def metadata_get_json_values(path_to_file: str):
+    """
+    Reads in the contents of the given json file, perform any requisite validations, and returns a
+    dict of the relevant data.
+
+    Parameters
+    ------
+    path_to_file: str of the location of the metadata json file
+
+    Returns
+    ------
+    dict of all values found in the metadata json file
+    """
+    if os.path.exists(path_to_file):
+        metadata_dict = json.loads(path_to_file)
+        # perform any requisite validations here, expected values present?
+        return metadata_dict
+    else:
+        # file does not currently exist, return empty dict
+        return {}
 
 
-def metadata_set_date():
-    """Sets the date parameter within the metadata file"""
-    pass
+def get_subject_name():
+    """
+    Gets the subject name value
+
+    Returns
+    ------
+    str: subject name 'test_mouse'
+    """
+    # TODO: Ask user for name, query file that contains the data, or call function
+    subject_name = 'test_mouse'
+    return subject_name
 
 
-def metadata_set_session_number():
-    """Sets the session_number parameter within the metadata file"""
-    pass
+def get_date():
+    """
+    Gets the datetime value in the preferred format
+
+    Returns
+    ------
+    str: datetime for now as a string, i.e. '1900-01-01 14:04:02'
+    """
+    our_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return our_datetime
 
 
-def metadata_file_exists():
-    """A check for whether the metadata file already exists with valid data"""
-    pass
+def get_session_number():
+    """
+    Gets the session_number value
+
+    Returns
+    ------
+    str: session number, i.e. '001'
+    """
+    # TODO: query file that contains the data or call function
+    session_number = '001'
+    return session_number
 
 
-def metadata_write_to_file():
-    """Attempt to write data to the metadata file"""
-    pass
+def get_rel_path():
+    """
+    Get the relative path value for the subject
+
+    Returns
+    ------
+    str: relative path, i.e. 'test_mouse/1901-01-01/001'
+    """
+    # TODO: query file that contains the data or call function
+    rel_path = 'test_mouse/1901-01-01/001'
+    return rel_path
 
 
-def metadata_set_rel_path():
-    pass  # Rel_path : subject_name / date / number
+def get_modality():
+    """
+    Get the modality value for what is currently in use
+
+    Returns
+    ------
+    str: modality, i.e. 'ephys'
+    """
+    # TODO: query file that contains the data or call function
+    modality = 'ephys'
+    return modality
 
 
-def metadata_set_modality():
-    pass  # Modality : [video | ephys | behavior | ...]
+def get_acquisition_start():
+    """
+    Get the acquisition start datetime value in datetime.isoformat
+
+    Returns
+    ------
+    str: datetime of acquisition start, i.e. '2022-02-07T13:46:35.236268'
+    """
+    # TODO: query file that contains the data or call function
+    acquisition_start = datetime.now().isoformat()
+    return acquisition_start
 
 
-def metadata_set_acquisition_start():
-    pass  # Acquisition_start: 2022 - 02 - 07T13: 46:35.236268
+def get_acquisition_stop():
+    """
+    Get the acquisition stop datetime value in datetime.isoformat
+
+    Returns
+    ------
+    str: datetime of acquisition stop, i.e. '2022-02-07T13:46:35.236268'
+    """
+    # TODO: query file that contains the data or call function
+    acquisition_stop = datetime.now().isoformat()
+    return acquisition_stop
 
 
-def metadata_set_acquisition_stop():
-    pass  # Acquisition_stop: 2022 - 02 - 07T13: 46:35.236269
+def get_files_for_extraction():
+    """
+    Get the list of filenames for extraction
+
+    Returns
+    ------
+    list: list of filenames that will require extraction, i.e. [‘file1.csv’, ‘file2.avi’, ...]
+    """
+    # TODO: query file that contains the data or call function
+    filename_list = ['file1.csv', 'file2.avi']
+    return filename_list
 
 
-def metadata_set_files_for_extraction():
-    pass  # Files_for_extraction: [‘file1.csv’, ‘file2.avi’, ...]
+def get_server_status():
+    """
+    Get the server status
+
+    Returns
+    ------
+    str: server status, i.e. 'present' or 'absent'
+    """
+    # TODO: query file that contains the data or call function
+    server_status = 'absent'
+    return server_status
 
 
-def metadata_set_server_status():
-    pass  # Server_status: [present | absent]
+def get_repo_hash():
+    """
+    Get the repository hash
+
+    Returns
+    ------
+    str: repository hash, i.e. 'db39a35aa13c93f553a686cb5a5f662c9406663e'
+    """
+    repo_hash = check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+    if not repo_hash:
+        print_stack()
+    return repo_hash
 
 
-def metadata_set_repo_hash():
-    # here = os.getcwd()
-    # os.chdir(folder)
-    # out = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
-    # os.chdir(here)
-    # if not out:
-    #     log.debug("Commit hash is empty string")
-    # log.debug(f"Found commit hash {out}")
-    # return out
-    pass  # Repo_hash / version: some_hash
+def get_local_data_folder():
+    """
+    Get the local data folder path
+
+    Returns
+    ------
+    str: local data folder path, i.e. 'C:\\iblrig_data'
+    """
+    # TODO: query file that contains the data or call function
+    local_data_folder = 'C:\\iblrig_data'
+    return local_data_folder
 
 
-def metadata_set_local_data_folder():
-    pass  # Local_data_folder: C:\iblrig_data\Subjects
+def get_remote_data_folder():
+    """
+    Get the remote data folder path
+
+    Returns
+    ------
+    str: remote data folder path, i.e. 'Y:\\'
+    """
+    # TODO: query file that contains the data or call function
+    remote_data_folder = 'Y:\\'
+    return remote_data_folder
 
 
-def metadata_set_remote_data_folder():
-    pass  # Remote_data_folder: Y:\Subjects
+def get_python_version():
+    """
+    Get the currently running version of python
+
+    Returns
+    ------
+    str: python version, i.e. '3.7.12'
+    """
+    python_version = version.split()[0]
+    return python_version
 
 
-def metadata_set_python_version():
-    pass  # Python_version: 3.7 | 3.8 | 3.9...
+def get_pip_freeze_output():
+    """
+    Get the output from a pip freeze command
+
+    Returns
+    ------
+    list: containing strings, i.e. ['attrs==21.4.0', 'iniconfig==1.1.1', 'packaging==21.3'...]
+    """
+    pip_freeze = check_output(["pip", "freeze"]).decode().split()
+    if not pip_freeze:
+        print_stack()
+    return pip_freeze
 
 
-def metadata_set_pip_freeze_output():
-    pass  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’, ‘flake8 >= 3.7.8’, ...]
+def metadata_write_to_file(dict_data: dict, path_to_file: str):
+    """
+    Attempt to write dictionary data to the metadata file at the given file location
+
+    Parameters
+    ------
+    dict_data: dictionary data that will be written to the metadata json file
+    path_to_file: location of the file to be written to
+
+    Returns
+    ------
+    bool: True for success, False for failure
+    """
+
+    if os.path.exists(path_to_file):
+        # TODO: throw error b/c the file already exists? simply overwrite? perform validation?
+        print_stack()
+        return False
+    else:
+        with open(path_to_file, 'w') as fp:
+            json.dump(dict_data, fp)
+        return True
 
 
-if __name__ == '__main__':
+def main():
     # Find the parameter file, verify it exists
     parameter_file_location = parameter_file_locator("/tmp/.iblrig_params.json")
 
     # Read the content of the parameter file
-    json_data = json.loads(open(parameter_file_location).read())
+    parameter_dict_data = json.loads(open(parameter_file_location).read())
 
     # Get subject name, separate function call? user prompt?
     mouse_name = "test_mouse"
 
     # Determine session number
-    # determine_session_number((json_data['DATA_FOLDER_LOCAL']+"\\Subjects"),
-    #                          (json_data['DATA_FOLDER_REMOTE']+"\\Subjects"),
+    # determine_session_number((parameter_dict_data['DATA_FOLDER_LOCAL']+"\\Subjects"),
+    #                          (parameter_dict_data['DATA_FOLDER_REMOTE']+"\\Subjects"),
     #                          mouse_name)
     dsn = determine_session_number('/tmp/', '/remotedatafolder/', mouse_name)
 
-    # Create directories if required
+    # ddd = determine_date_directory()
+    # dm = determine_modality()
+    # dsp = determine_server_present()
+
+    # Create (sub)directories if required
     # os.makedirs(full_directory_path, exist_ok=True)
 
     # Determine location for the metadata file to be stored
-    # "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.yaml"
-    mdfl = metadata_file_location('001', '1900-01-01', '001', 'ephys', False)
+    # "C:\\iblrig_data\\Subjects\\test_mouse\\1900-01-01\\001\\raw_ephys_data\\session_metadata.json"
+    # mdfl = metadata_file_location(mouse_name, ddd, dsn, dm, dsp)
+    mdfl = metadata_file_location(mouse_name, '1900-01-01', '001', 'ephys', False)
 
-    # Set parameters to be stored into the metadata file:
-    metadata_set_subject()  # Subject : <subject_name>
-    metadata_set_date()  # Date : <date>
-    metadata_set_session_number()  # Session_number : <session_number>
-    metadata_set_rel_path()  # Rel_path : subject_name / date / number
-    metadata_set_modality()  # Modality : [video | ephys | behavior | ...]
-    metadata_set_acquisition_start()  # Acquisition_start: 2022 - 02 - 07T13: 46:35.236268
-    metadata_set_acquisition_stop()  # Acquisition_stop: 2022 - 02 - 07T13: 46:35.236269
-    metadata_set_files_for_extraction()  # Files_for_extraction: [‘file1.csv’, ‘file2.avi’, ...]
-    metadata_set_server_status()  # Server_status: [present | absent]
-    metadata_set_repo_hash()  # Repo_hash / version: some_hash
-    metadata_set_local_data_folder()  # Local_data_folder: C:\iblrig_data\Subjects
-    metadata_set_remote_data_folder()  # Remote_data_folder: Y:\Subjects
-    metadata_set_python_version()  # Python_version: 3.7 | 3.8 | 3.9...
-    metadata_set_pip_freeze_output()  # Pip_freeze_output: [‘click >= 7.0.0’, ‘colorlog >= 4.0.2’]
-    # TODO:
-    #  Create getter functions
-    #  Get list of hardware and Windows patch level?
+    # Read in json values
+    md_dict = metadata_get_json_values(mdfl)
 
-    # check if metadata file already exists and contains valid data
-    metadata_file_exists()
+    # Set values to be stored into the metadata file:
+    md_dict['Subject_name'] = get_subject_name()
+    md_dict['Date'] = get_date()
+    md_dict['Session_number'] = get_session_number()
+    md_dict['Rel_path'] = get_rel_path()
+    md_dict['Modality'] = get_modality()
+    md_dict['Acquisition_start'] = get_acquisition_start()
+    md_dict['Acquisition_stop'] = get_acquisition_stop()
+    md_dict['Files_for_extraction'] = get_files_for_extraction()
+    md_dict['Server_status'] = get_server_status()
+    md_dict['Repo_hash'] = get_repo_hash()
+    md_dict['Local_data_folder'] = get_local_data_folder()
+    md_dict['Remote_data_folder'] = get_remote_data_folder()
+    md_dict['Python_version'] = get_python_version()
+    md_dict['Pip_freeze_output'] = get_pip_freeze_output()
+    # TODO: Get list of hardware and Windows patch level?
+
     # write data to the metadata file
-    metadata_write_to_file()
+    metadata_write_to_file(md_dict, mdfl)
+
+
+if __name__ == "__main__":
+    main()

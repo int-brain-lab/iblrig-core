@@ -42,28 +42,29 @@ def test_load_status_file():
 def test_caller_old():
     fullpath = Path(__file__)
     out = caller_old(True)
-    assert out == str(fullpath) + '/' + 'test_caller'
+    assert out == str(fullpath) + "/" + "test_caller"
     out = caller_old(False)
-    assert out == str(fullpath.name) + '/' + 'test_caller'
+    assert out == str(fullpath.name) + "/" + "test_caller"
 
 
 def test_caller():
     fullpath = Path(__file__)
-    modulename = fullpath.name.split('.')[0]
+    modulename = fullpath.name.split(".")[0]
     packagename = fullpath.parent.name
     out = caller(1)
-    assert out == ".".join([packagename, modulename, 'test_caller'])
+    assert out == ".".join([packagename, modulename, "test_caller"])
 
 
 def test_caller_one_level_deeper():
     fullpath = Path(__file__)
-    modulename = fullpath.name.split('.')[0]
+    modulename = fullpath.name.split(".")[0]
     packagename = fullpath.parent.name
+
     def fake_row(var):
         return caller(var)
 
     out = fake_row(2)
-    assert out == ".".join([packagename, modulename, 'test_caller_one_level_deeper'])
+    assert out == ".".join([packagename, modulename, "test_caller_one_level_deeper"])
 
 
 def test_append_status_file():

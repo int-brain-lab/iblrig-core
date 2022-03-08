@@ -151,7 +151,7 @@ def append_status_file(session_path: Path, action: str) -> None:
         print("status file does not exist")
         return {}
     row = [timestamp(), computer_name(), caller(), modality(), action]
-    with open(status_file, 'a') as f:
+    with open(status_file, "a") as f:
         writer = csv.writer(f)
         writer.writerow(row)
     return

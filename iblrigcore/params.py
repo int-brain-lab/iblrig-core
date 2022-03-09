@@ -16,8 +16,9 @@ log = logging.getLogger("iblrig")
 PARAMS_FILE_PATH = Path().home().joinpath(".iblrigcore_params.json")
 
 
-class BaseParamFile(type):
-    """Simple Parameter file interaction class
+class ParamFile:
+    """Simple Parameter file interaction class. Creates a class factory that
+    doubles as a parent object.
 
     Returns:
         _type_: _description_
@@ -32,23 +33,24 @@ class BaseParamFile(type):
     default_folderpath = Path().home().joinpath(".iblrigcore")
     default_filepath = default_folderpath.joinpath(default_filename)
 
-    filename = None
+    filename = None  # These could potentially go into the init?
     foderpath = None
     filepath = None
     template = None
 
-    def __new__(
-        cls,
+    def __init__(self,
         filename: str = None,
         folderpath: Path = None,
         filepath: Path = None,
         template: dict = None,
     ):
-        # obj = super().__new__(cls)
-        cls.set_file(filename=filename, folderpath=folderpath, filepath=filepath)
-        cls.set_template(template=template)
-        return cls  # if cls isn't returned the class is not initialized
+        # super(BaseParamFile, cls).__new__(cls)
+        super().__init__()
+        self.set_file(filename=filename, folderpath=folderpath, filepath=filepath)
+        self.set_template(template=template)
+        # return cls  # if cls isn't returned the __inint__ is not called
 
+    def init_class
     @classmethod
     def set_file(
         cls, filename: str = None, folderpath: Path = None, filepath: Path = None
@@ -181,32 +183,53 @@ class BaseParamFile(type):
         cls.update(pars)
 
 
-class VideoParamFile(BaseParamFile):
-    __metaclass__ = BaseParamFile
-    pass
+class VideoParamFile(ParamFile):
+    # __metaclass__ = BaseParamFile
+    def __init__(self, *args, **kwargs):
+        # super(VideoParamFile, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        # self.template = VideoParamFile.default_template
+        self.video_fname = ".videopc_params.json"
+        self.video_params = {
+            "BODY_CAM_IDX": int,
+            "LEFT_CAM_IDX": int,
+            "RIGHT_CAM_IDX": int,
+        }
+        self.set_file(filename=self.video_fname)
+        self.set_template(template=self.video_params)
 
 
-class EphysParamFile(BaseParamFile):
-    __metaclass__ = BaseParamFile
+class EphysParamFile(ParamFile):
+    # __metaclass__ = BaseParamFile
     def __init__(self, *args, **kwargs) -> None:
-        self.some_var = "WTF?!?!?!"
+        # super(EphysParamFile, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        # self.template = EphysParamFile.default_template
 
     def method():
         print("aaaa")
 
 
-video_fname = ".videopc_params.json"
-video_params = {
-    "BODY_CAM_IDX": int,
-    "LEFT_CAM_IDX": int,
-    "RIGHT_CAM_IDX": int,
-}
 ephys_fname = ".ephyspc_params.json"
 ephys_params = {
     "PROBE_TYPE_00": int,
     "PROBE_TYPE_01": int,
 }
 
-BaseParamFile()
-VideoParamFile(filename=video_fname, template=video_params)
+print("BaseClass-default\n", ParamFile.default_template)
+print("BaseClass\n", ParamFile.template)
+print("VideoClass\n", VideoParamFile.template)
+print("EphysClass\n", EphysParamFile.template)
+
+# Initiates BaseParamFile class
+ParamFile()
+# Initiates VideoParamFile class
+VideoParamFile()
+# Initiates EphysParamFile object
 bla = EphysParamFile(filename=ephys_fname, template=ephys_params)
+
+print("---")
+print("BaseClass\n", ParamFile.template)
+print("VideoClass\n", VideoParamFile.template)
+print("EphysClass\n", EphysParamFile.template)
+print("EphysInstance\n", bla.template)

@@ -24,23 +24,23 @@ if not os.path.exists(INSTALL_LOG_PATH):
 logging.basicConfig(filename=INSTALL_LOG_PATH, level=logging.DEBUG)
 
 
-def parameter_file_locator(path_to_file="C:\\iblrig_params\\.iblrig_params.json"):
+def parameter_file_locator(file_path="C:\\iblrig_params\\.iblrig_params.json"):
     """
     Used to find and verify parameter file exists. Parameter file initially created by iblrig
     install script (TODO: double check what actually creates the file)
 
     Parameters
     ------
-    path_to_file: str of file location, defaults to "C:\\iblrig_params\\.iblrig_params.json"
+    file_path: str of file location, defaults to "C:\\iblrig_params\\.iblrig_params.json"
 
     Returns
     ------
     str of the path to the .iblrig_params.json file
 
     """
-    file_exists = os.path.exists(path_to_file)
+    file_exists = os.path.exists(file_path)
     if file_exists:
-        return path_to_file
+        return file_path
     else:
         logging.debug('Could not find the .iblrig_params.json file.')
         print_stack()
@@ -110,21 +110,21 @@ def metadata_file_location(subject_name: str, date_directory: str, session_numbe
     return metadata_file_loc
 
 
-def metadata_get_json_values(path_to_file: str):
+def metadata_get_json_values(file_path: str):
     """
     Reads in the contents of the given json file, perform any requisite validations, and returns a
     dict of the relevant data.
 
     Parameters
     ------
-    path_to_file: str of the location of the metadata json file
+    file_path: str of the location of the metadata json file
 
     Returns
     ------
     dict of all values found in the metadata json file
     """
-    if os.path.exists(path_to_file):
-        metadata_dict = json.loads(path_to_file)
+    if os.path.exists(file_path):
+        metadata_dict = json.loads(file_path)
         # perform any requisite validations here, expected values present?
         return metadata_dict
     else:
@@ -256,6 +256,7 @@ def get_repo_hash():
     ------
     str: repository hash, i.e. 'db39a35aa13c93f553a686cb5a5f662c9406663e'
     """
+    # TODO: Add try/except and logging
     repo_hash = check_output(["git", "rev-parse", "HEAD"]).decode().strip()
     if not repo_hash:
         print_stack()
@@ -308,33 +309,42 @@ def get_pip_freeze_output():
     ------
     list: containing strings, i.e. ['attrs==21.4.0', 'iniconfig==1.1.1', 'packaging==21.3'...]
     """
-    pip_freeze = check_output(["pip", "freeze"]).decode().split()
-    if not pip_freeze:
+    pip_freeze = ''
+    try:
+        pip_freeze = check_output(["pip", "freeze"]).decode().split()
+        if not pip_freeze:
+            print_stack()
+    except Exception as e:
+        print(e)
         print_stack()
     return pip_freeze
 
 
-def metadata_write_to_file(dict_data: dict, path_to_file: str):
+def metadata_write_to_file(dict_data: dict, file_path: str):
     """
     Attempt to write dictionary data to the metadata file at the given file location
 
     Parameters
     ------
     dict_data: dictionary data that will be written to the metadata json file
-    path_to_file: location of the file to be written to
+    file_path: location of the file to be written to
 
     Returns
     ------
     bool: True for success, False for failure
     """
 
-    if os.path.exists(path_to_file):
+    if os.path.exists(file_path):
         # TODO: throw error b/c the file already exists? simply overwrite? perform validation?
-        print_stack()
+        # print_stack()
         return False
     else:
-        with open(path_to_file, 'w') as fp:
-            json.dump(dict_data, fp)
+        try:
+            with open(file_path, 'w') as fp:
+                json.dump(dict_data, fp)
+        except Exception as e:
+            print(e)
+            print_stack()
         return True
 
 

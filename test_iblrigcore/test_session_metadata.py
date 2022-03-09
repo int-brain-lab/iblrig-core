@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 
@@ -16,20 +17,66 @@ class TestSessionMetadata(unittest.TestCase):
         with self.assertRaises(SystemExit):
             sm.parameter_file_locator(definitely_not_a_file)
 
+    def test_determine_session_number(self):
+        assert False
+
     def test_metadata_file_location(self):
         assert False
 
-    def test_metadata_set_subject(self):
+    def test_metadata_get_json_values(self):
         assert False
 
-    def test_metadata_set_date(self):
+    def test_get_subject_name(self):
         assert False
 
-    def test_metadata_set_session_number(self):
+    def test_get_date(self):
         assert False
 
-    def test_metadata_file_exists(self):
+    def test_get_session_number(self):
         assert False
+
+    def test_get_rel_path(self):
+        assert False
+
+    def test_get_modality(self):
+        assert False
+
+    def test_get_acquisition_start(self):
+        assert False
+
+    def test_get_acquisition_stop(self):
+        assert False
+
+    def test_get_files_for_extraction(self):
+        assert False
+
+    def test_get_server_status(self):
+        assert False
+
+    def test_get_repo_hash(self):
+        assert False
+
+    def test_get_local_data_folder(self):
+        assert False
+
+    def test_get_remote_data_folder(self):
+        assert False
+
+    def test_get_python_version(self):
+        self.assertTrue(isinstance(sm.get_python_version(), str))
+
+    def test_get_pip_freeze_output(self):
+        pip_freeze_output = sm.get_pip_freeze_output()
+        self.assertTrue(isinstance(pip_freeze_output(), list))
+        if pip_freeze_output:
+            for item in pip_freeze_output:
+                self.assertTrue(isinstance(item, str))
 
     def test_metadata_write_to_file(self):
-        assert False
+        test_dict = {1: 'apple', 2: 'ball'}
+        test_tempfile = tempfile.NamedTemporaryFile()
+        test_fake_file = '/tmp/test_fake_file.json'
+        self.assertFalse(sm.metadata_write_to_file(test_dict, test_tempfile.name))
+        self.assertTrue(sm.metadata_write_to_file(test_dict, test_fake_file))
+        test_json_file_content = json.loads(open(test_fake_file).read())
+        self.assertTrue(isinstance(test_json_file_content, dict))

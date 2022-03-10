@@ -3,46 +3,34 @@ import logging
 import os
 
 from datetime import datetime
+from pathlib import Path
 from subprocess import check_output
 from sys import exit, platform, version
 from traceback import print_stack
 
-# configure logging based on platform TODO: move elsewhere
-INSTALL_LOG_PATH = ''
-if platform == "linux" or platform == "linux2":
-    INSTALL_LOG_PATH = '/tmp/iblrig-core.log'
-elif platform == "win32":
-    if not os.path.isdir('C:\\Temp'):
-        os.mkdir('C:\\Temp')
-    INSTALL_LOG_PATH = 'C:\\Temp\\iblrig-core.log'
-else:
-    logging.warning('Operating system not supported, exiting...')
-    exit()
-
-if not os.path.exists(INSTALL_LOG_PATH):
-    os.mknod(INSTALL_LOG_PATH)
-logging.basicConfig(filename=INSTALL_LOG_PATH, level=logging.DEBUG)
+log = logging.getLogger("iblrig")
+PARAMS_FILE_PATH = Path().home().joinpath(".iblrigcore_params.json")
 
 
-def parameter_file_locator(file_path="C:\\iblrig_params\\.iblrig_params.json"):
+def parameter_file_locator(file_path=PARAMS_FILE_PATH):
     """
     Used to find and verify parameter file exists. Parameter file initially created by iblrig
     install script (TODO: double check what actually creates the file)
 
     Parameters
     ------
-    file_path: str of file location, defaults to "C:\\iblrig_params\\.iblrig_params.json"
+    file_path: str of file location, defaults to variable PARAMS_FILE_PATH
 
     Returns
     ------
-    str of the path to the .iblrig_params.json file
+    str of the path to the .iblrigcore_params.json file
 
     """
     file_exists = os.path.exists(file_path)
     if file_exists:
         return file_path
     else:
-        logging.debug('Could not find the .iblrig_params.json file.')
+        logging.debug('Could not find the .iblrigcore_params.json file.')
         print_stack()
         exit()  # or assume suitable defaults?
 
@@ -153,7 +141,7 @@ def get_date():
     ------
     str: datetime for now as a string, i.e. '1900-01-01 14:04:02'
     """
-    our_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    our_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     return our_datetime
 
 

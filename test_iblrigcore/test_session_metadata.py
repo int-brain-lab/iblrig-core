@@ -1,7 +1,7 @@
 import json
 import tempfile
 import unittest
-
+from datetime import datetime
 import iblrigcore.session_metadata as sm
 
 
@@ -30,7 +30,10 @@ class TestSessionMetadata(unittest.TestCase):
         assert False
 
     def test_get_date(self):
-        assert False
+        test_date = sm.get_date()
+        self.assertTrue(isinstance(test_date, str))
+        test_datetime_object = datetime.strptime(test_date, '%Y-%m-%d %H:%M:%S')
+        self.assertTrue(isinstance(test_datetime_object, datetime))
 
     def test_get_session_number(self):
         assert False
@@ -73,7 +76,7 @@ class TestSessionMetadata(unittest.TestCase):
                 self.assertTrue(isinstance(item, str))
 
     def test_metadata_write_to_file(self):
-        test_dict = {1: 'apple', 2: 'ball'}
+        test_dict = {1: 'apple', 2: 'orange'}
         test_tempfile = tempfile.NamedTemporaryFile()
         test_fake_file = '/tmp/test_fake_file.json'
         self.assertFalse(sm.metadata_write_to_file(test_dict, test_tempfile.name))

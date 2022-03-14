@@ -13,8 +13,6 @@ import iblrigcore
 
 log = logging.getLogger("iblrig")
 
-PARAMS_FILE_PATH = Path().home().joinpath(".iblrigcore_params.json")
-
 
 class ParamFile:
     """Simple Parameter file interaction class. Creates a class factory that
@@ -25,9 +23,9 @@ class ParamFile:
     """
 
     default_template = {
-        "MODALITY": None,
-        "DATA_FOLDER_LOCAL": None,  # str
-        "DATA_FOLDER_REMOTE": None,  # str
+        "MODALITY": str,
+        "DATA_FOLDER_LOCAL": str,
+        "DATA_FOLDER_REMOTE": str,
     }
     default_filename = f".iblrigcore_params.json"
     default_folderpath = Path().home().joinpath(".iblrigcore")
@@ -38,19 +36,59 @@ class ParamFile:
     filepath = None
     template = None
 
-    def __init__(self,
+    def __init__(
+        self,
         filename: str = None,
         folderpath: Path = None,
         filepath: Path = None,
         template: dict = None,
     ):
-        # super(BaseParamFile, cls).__new__(cls)
+        # super(ParamFile, cls).__new__(cls)
         super().__init__()
         self.set_file(filename=filename, folderpath=folderpath, filepath=filepath)
         self.set_template(template=template)
         # return cls  # if cls isn't returned the __inint__ is not called
 
-    def init_class
+    @classmethod
+    def __init_subclass__(
+        cls,
+        filename: str = None,
+        folderpath: Path = None,
+        filepath: Path = None,
+        template: dict = None,
+    ):
+        """Guarantees the template filename and filepath class attributes are populated with the
+        default values on subclassing. All logic of the Base class uses these attributes, so if user does not
+        call the init_class method the subclass will still work."""
+        super().__init_subclass__()
+        cls.init_class(
+            filename=filename, folderpath=folderpath, filepath=filepath, template=template
+        )
+
+    @classmethod
+    def init_class(
+        cls,
+        filename: str = None,
+        folderpath: Path = None,
+        filepath: Path = None,
+        template: dict = None,
+    ):
+        """Initializes the class file args using either a name/folder or a path.
+        Set the filepath for the parameter file. determines the folderpath and filename.
+        Defaults are used if no input is given.
+
+
+        Args:
+            filename (str, optional): Name of param file. Defaults to None.
+            folderpath (Path, optional): folder to save it. Defaults to None.
+            filepath (Path, optional): fullpath of paramfile. Defaults to None.
+
+        Raises:
+            ValueError: If both filename/folderpath AND filepath are set.
+        """
+        cls.set_file(filename=filename, folderpath=folderpath, filepath=filepath)
+        cls.set_template(template=template)
+
     @classmethod
     def set_file(
         cls, filename: str = None, folderpath: Path = None, filepath: Path = None
@@ -69,9 +107,7 @@ class ParamFile:
             ValueError: If both filename/folderpath AND filepath are set.
         """
         if filepath and (filename or folderpath):
-            raise ValueError(
-                "You can specify either filepath or filename/folderpath."
-            )
+            raise ValueError("You can specify either filepath or filename/folderpath.")
         if filepath:
             filepath = Path(filepath)
             cls.filename = filepath.name
@@ -93,11 +129,13 @@ class ParamFile:
             template (dict, optional): A template used to generate a new parameter file.
                                         Defaults to None.
         """
+        if not isinstance(cls.template, dict):
+            cls.template = {}
         if template is None:
             template = cls.default_template
         else:
             template = {**cls.default_template, **template}
-        cls.template = template
+        cls.template.update(template)
 
     @classmethod
     def write(cls, pars: dict) -> None:
@@ -184,7 +222,7 @@ class ParamFile:
 
 
 class VideoParamFile(ParamFile):
-    # __metaclass__ = BaseParamFile
+    # __metaclass__ = ParamFile
     def __init__(self, *args, **kwargs):
         # super(VideoParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
@@ -195,41 +233,49 @@ class VideoParamFile(ParamFile):
             "LEFT_CAM_IDX": int,
             "RIGHT_CAM_IDX": int,
         }
-        self.set_file(filename=self.video_fname)
-        self.set_template(template=self.video_params)
+        self.init_class(filename=self.video_fname, template=self.video_params)
 
 
 class EphysParamFile(ParamFile):
-    # __metaclass__ = BaseParamFile
+    # __metaclass__ = ParamFile
     def __init__(self, *args, **kwargs) -> None:
         # super(EphysParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
         # self.template = EphysParamFile.default_template
+        self.ephys_fname = ".ephyspc_params.json"
+        self.ephys_params = {
+            "PROBE_TYPE_00": int,
+            "PROBE_TYPE_01": int,
+        }
+        self.init_class(filename=self.ephys_fname, template=self.ephys_params)
 
     def method():
         print("aaaa")
 
 
-ephys_fname = ".ephyspc_params.json"
-ephys_params = {
-    "PROBE_TYPE_00": int,
-    "PROBE_TYPE_01": int,
-}
 
 print("BaseClass-default\n", ParamFile.default_template)
 print("BaseClass\n", ParamFile.template)
+# subclassed classes should have the default template populated as per __init_subclass__
 print("VideoClass\n", VideoParamFile.template)
 print("EphysClass\n", EphysParamFile.template)
 
-# Initiates BaseParamFile class
+# Initiates ParamFile class
 ParamFile()
 # Initiates VideoParamFile class
 VideoParamFile()
-# Initiates EphysParamFile object
-bla = EphysParamFile(filename=ephys_fname, template=ephys_params)
+# Initiates EphysParamFile object and instanciates it
+bla = EphysParamFile()
+ble = VideoParamFile()
 
 print("---")
 print("BaseClass\n", ParamFile.template)
 print("VideoClass\n", VideoParamFile.template)
 print("EphysClass\n", EphysParamFile.template)
 print("EphysInstance\n", bla.template)
+print("VideoInstance\n", ble.template)
+
+# Multiple inheritance gets messy but can return a cumulative template of all parent classes :)
+class VideoEphysParamFile(EphysParamFile, VideoParamFile):
+    __metaclass__ = ParamFile
+    ...

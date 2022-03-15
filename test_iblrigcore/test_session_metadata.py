@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from datetime import datetime
+
 import iblrigcore.session_metadata as sm
 
 
@@ -70,13 +71,13 @@ class TestSessionMetadata(unittest.TestCase):
 
     def test_get_pip_freeze_output(self):
         pip_freeze_output = sm.get_pip_freeze_output()
-        self.assertTrue(isinstance(pip_freeze_output(), list))
+        self.assertTrue(isinstance(pip_freeze_output, list))
         if pip_freeze_output:
             for item in pip_freeze_output:
                 self.assertTrue(isinstance(item, str))
 
     def test_metadata_write_to_file(self):
-        test_dict = {1: 'apple', 2: 'orange'}
+        test_dict = {1: 'test', 2: 'dict', 3: 'values'}
         test_tempfile = tempfile.NamedTemporaryFile()
         test_fake_file = '/tmp/test_fake_file.json'
         self.assertFalse(sm.metadata_write_to_file(test_dict, test_tempfile.name))

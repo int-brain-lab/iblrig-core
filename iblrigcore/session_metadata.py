@@ -248,8 +248,7 @@ def get_repo_hash():
         repo_hash = check_output(["git", "rev-parse", "HEAD"]).decode().strip()
         return repo_hash
     except CalledProcessError:
-        print(CalledProcessError)
-        print_stack()
+        log.debug(CalledProcessError, print_stack())
 
 
 def get_local_data_folder():
@@ -298,15 +297,14 @@ def get_pip_freeze_output():
     ------
     list: containing strings, i.e. ['attrs==21.4.0', 'iniconfig==1.1.1', 'packaging==21.3'...]
     """
-    pip_freeze = ''
     try:
         pip_freeze = check_output(["pip", "freeze"]).decode().split()
         if not pip_freeze:
-            print_stack()
-    except Exception as e:
-        print(e)
-        print_stack()
-    return pip_freeze
+            log.debug("Running the 'pip freeze' command did not have expected results.\n",
+                      print_stack())
+        return pip_freeze
+    except CalledProcessError:
+        log.debug(CalledProcessError, print_stack())
 
 
 def metadata_write_to_file(dict_data: dict, file_path: str):
@@ -331,9 +329,8 @@ def metadata_write_to_file(dict_data: dict, file_path: str):
         try:
             with open(file_path, 'w') as fp:
                 json.dump(dict_data, fp)
-        except Exception as e:
-            print(e)
-            print_stack()
+        except IOError:
+            log.debug(IOError, print_stack())
         return True
 
 

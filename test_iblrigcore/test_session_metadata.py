@@ -57,7 +57,7 @@ class TestSessionMetadata(unittest.TestCase):
         assert False
 
     def test_get_repo_hash(self):
-        assert False
+        self.assertTrue(isinstance(sm.get_repo_hash(), str))
 
     def test_get_local_data_folder(self):
         assert False

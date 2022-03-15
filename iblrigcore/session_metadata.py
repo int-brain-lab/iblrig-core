@@ -4,8 +4,8 @@ import os
 
 from datetime import datetime
 from pathlib import Path
-from subprocess import check_output
-from sys import exit, platform, version
+from subprocess import check_output, CalledProcessError
+from sys import exit, version
 from traceback import print_stack
 
 log = logging.getLogger("iblrig")
@@ -15,7 +15,7 @@ PARAMS_FILE_PATH = Path().home().joinpath(".iblrigcore_params.json")
 def parameter_file_locator(file_path=PARAMS_FILE_PATH):
     """
     Used to find and verify parameter file exists. Parameter file initially created by iblrig
-    install script (TODO: double check what actually creates the file)
+    install script (TODO: refactor to use the ParamFile class read method)
 
     Parameters
     ------
@@ -67,7 +67,7 @@ def determine_session_number(subject_folder_local="C:\\iblrig_data\\Subjects",
             # first recording for this subject
             return '001'
 
-    return '001'  # value hardcoded just for testing
+    return '001'  # value hardcoded for testing
 
 
 def metadata_file_location(subject_name: str, date_directory: str, session_number: str,
@@ -244,11 +244,12 @@ def get_repo_hash():
     ------
     str: repository hash, i.e. 'db39a35aa13c93f553a686cb5a5f662c9406663e'
     """
-    # TODO: Add try/except and logging
-    repo_hash = check_output(["git", "rev-parse", "HEAD"]).decode().strip()
-    if not repo_hash:
+    try:
+        repo_hash = check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+        return repo_hash
+    except CalledProcessError:
+        print(CalledProcessError)
         print_stack()
-    return repo_hash
 
 
 def get_local_data_folder():

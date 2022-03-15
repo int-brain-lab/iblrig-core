@@ -3,10 +3,11 @@
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Wednesday, February 23rd 2022, 4:20:19 pm
 """Video acquisition steps:
-Configuration:
-- Create local parameter file:
-    number of cameras and camera indexes
-    camera configuration
+# Configuration:
+- Create local parameter file --> VideoParamFile:
+    - number of cameras and camera indexes
+    - camera configuration?
+    - camera
 @acquisition_start:
 -
 """

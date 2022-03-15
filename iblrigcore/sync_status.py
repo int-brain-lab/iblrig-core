@@ -8,6 +8,13 @@ import socket
 from datetime import datetime
 from pathlib import Path
 
+from iblrigcore.params import ParamFile
+
+
+def modality() -> str:
+    """return the name of the modality"""
+    return ParamFile.read(key='MODALITY')
+
 
 def timestamp() -> str:
     """_summary_: Returns a timestamp.
@@ -38,7 +45,7 @@ def caller_old(fullpath: bool = True) -> str:
     Returns:
         str: fullpath/caller_name OR filename/caller_name
     """
-    stack = inspect.stack()
+    stack = inspect.stack()modality
     name = stack[1][3]  # caller's name or stack[1].function
     fname = stack[1][0].f_code.co_filename
     # name = stack[1][0].f_code.co_name
@@ -102,7 +109,7 @@ def create_status_file(session_path: Path) -> None:
         return
     header = ["Timestamp", "ComputerName", "Caller", "Modality", "Action"]
     # e.g. [2022-02-22T22:22:22:22.222222, IBLvideo, iblrig.iblrigcore.prepare_session, videoPC, start_acquisition]
-    row = [timestamp(), computer_name(), caller(), "created_status_file"]
+    row = [timestamp(), computer_name(), caller(), modality(), "created_status_file"]
     with open(status_file, "w", encoding="UTF8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(header)

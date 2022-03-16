@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from datetime import datetime
@@ -43,7 +44,13 @@ class TestSessionMetadata(unittest.TestCase):
         assert False
 
     def test_get_modality(self):
-        assert False
+        # TODO: call some function to get list of modalities
+        #  - modality_list = get_modality_list()
+        modality_list = ['ephys', 'video', 'behavior', 'training', 'etc']
+        modality = sm.get_modality()
+        self.assertTrue(isinstance(modality, str))
+        if modality not in modality_list:
+            assert False
 
     def test_get_acquisition_start(self):
         assert False
@@ -61,10 +68,16 @@ class TestSessionMetadata(unittest.TestCase):
         self.assertTrue(isinstance(sm.get_repo_hash(), str))
 
     def test_get_local_data_folder(self):
-        assert False
+        local_data_folder = sm.get_local_data_folder()
+        self.assertTrue(isinstance(local_data_folder, str))
+        if not os.path.exists(os.path.dirname(local_data_folder)):
+            assert False
 
     def test_get_remote_data_folder(self):
-        assert False
+        remote_data_folder = sm.get_remote_data_folder()
+        self.assertTrue(isinstance(remote_data_folder, str))
+        if not os.path.exists(os.path.dirname(remote_data_folder)):
+            assert False
 
     def test_get_python_version(self):
         self.assertTrue(isinstance(sm.get_python_version(), str))

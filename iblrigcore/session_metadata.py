@@ -8,8 +8,12 @@ from subprocess import check_output, CalledProcessError
 from sys import exit, version
 from traceback import print_stack
 
+from iblrigcore.params import ParamFile
+
 log = logging.getLogger("iblrig")
 PARAMS_FILE_PATH = Path().home().joinpath(".iblrigcore_params.json")
+
+
 
 
 def parameter_file_locator(file_path=PARAMS_FILE_PATH):
@@ -172,16 +176,13 @@ def get_rel_path():
 
 
 def get_modality():
-    """
-    Get the modality value for what is currently in use
+    """Get the name of the modality
 
     Returns
     ------
     str: modality, i.e. 'ephys'
     """
-    # TODO: query file that contains the data or call function
-    modality = 'ephys'
-    return modality
+    return ParamFile.read(key='MODALITY')
 
 
 def get_acquisition_start():
@@ -252,29 +253,23 @@ def get_repo_hash():
 
 
 def get_local_data_folder():
-    """
-    Get the local data folder path
+    """Get the local data folder path
 
     Returns
     ------
     str: local data folder path, i.e. 'C:\\iblrig_data'
     """
-    # TODO: query file that contains the data or call function
-    local_data_folder = 'C:\\iblrig_data'
-    return local_data_folder
+    return ParamFile.read(key='DATA_FOLDER_LOCAL')
 
 
 def get_remote_data_folder():
-    """
-    Get the remote data folder path
+    """Get the remote data folder path
 
     Returns
     ------
     str: remote data folder path, i.e. 'Y:\\'
     """
-    # TODO: query file that contains the data or call function
-    remote_data_folder = 'Y:\\'
-    return remote_data_folder
+    return ParamFile.read(key='DATA_FOLDER_REMOTE')
 
 
 def get_python_version():

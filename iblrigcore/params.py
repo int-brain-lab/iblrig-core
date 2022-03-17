@@ -2,26 +2,20 @@
 # @File: iblrigcore/params.py
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Monday, February 28th 2022, 5:11:39 pm
+from ast import Param
 from fileinput import filename
 import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, List, Union, List
 
 import iblrigcore
 
 log = logging.getLogger("iblrig")
 
 
-class ParamFile:
-    """Simple Parameter file interaction class. Creates a class factory that
-    doubles as a parent object.
-
-    Returns:
-        _type_: _description_
-    """
-
+class MetaParamFile(type):
     default_template = {
         "MODALITY": str,
         "DATA_FOLDER_LOCAL": str,
@@ -31,21 +25,98 @@ class ParamFile:
     default_folderpath = Path().home().joinpath(".iblrigcore")
     default_filepath = default_folderpath.joinpath(default_filename)
 
-    filename = None  # These could potentially go into the init?
-    foderpath = None
-    filepath = None
-    template = None
+    _classname: List[str] = []
+    _filename: List[str] = []
+    _folderpath: List[Path] = []
+    _template: List[dict] = []
+    _filepath: List[Path] = []
+    _filepath_exists: List[bool] = []
 
-    def __init__(
-        self,
-        filename: str = None,
-        folderpath: Path = None,
-        filepath: Path = None,
-        template: dict = None,
-    ):
+    @staticmethod
+    def _get_value(clsvar):
+        if len(clsvar) == 1:
+            return clsvar[0]
+        else:
+            return clsvar
+
+    @staticmethod
+    def _parse_value(value):
+        if not isinstance(value, list):
+            return [value]
+        else:
+            return value
+
+    @property
+    def filepath(cls):
+        return cls._get_value(cls._filepath)
+
+    @filepath.setter
+    def filepath(cls, value):
+        cls._filepath = cls._parse_value(value)
+
+    @property
+    def filename(cls):
+        return cls._get_value(cls._filename)
+
+    @filename.setter
+    def filename(cls, value):
+        cls._filename = cls._parse_value(value)
+
+    @property
+    def folderpath(cls):
+        return cls._get_value(cls._folderpath)
+
+    @folderpath.setter
+    def folderpath(cls, value):
+        cls._folderpath = cls._parse_value(value)
+
+    @property
+    def filepath_exists(cls):
+        return cls._get_value(cls._filepath_exists)
+
+    @filepath_exists.setter
+    def filepath_exists(cls, value):
+        cls._filepath_exists = cls._parse_value(value)
+
+    @property
+    def template(cls):
+        return cls._get_value(cls._template)
+
+    @template.setter
+    def template(cls, value):
+        cls._template = cls._parse_value(value)
+
+    @property
+    def classname(cls):
+        return cls._get_value(cls._classname)
+
+    @classname.setter
+    def classname(cls, value):
+        cls._classname = cls._parse_value(value)
+
+    def check_base_class(cls):
+        return cls.__name__ == 'ParamFile'
+
+class Bla(object, metaclass=MetaParamFile):
+    ...
+
+class ParamFile(object, metaclass=MetaParamFile):
+    """Simple Parameter file interaction class. Creates a class factory that
+    doubles as a parent object.
+
+    Returns:
+        _type_: _description_
+    """
+    # def __new__(cls):
+    #     ParamFile._set_base_attributes()
+    #     return cls
+
+    def __init__(self):
         super().__init__()
         ParamFile._set_base_attributes()
+        self.someattrib = 42  # only accessible to the instances
 
+    @classmethod
     def __init_subclass__(
         cls,
         filename: str = None,
@@ -60,7 +131,25 @@ class ParamFile:
         cls.init_class(
             filename=filename, folderpath=folderpath, filepath=filepath, template=template
         )
-        ParamFile._set_base_attributes()
+
+    @classmethod
+    def _set_base_attributes(cls) -> None:
+        """Finds the existing filepaths and templates of any ParamFile children.
+        Sets the base class attributes based on the existing subclass attributes.
+        """
+        fpaths = []
+        templates = []
+        classnames = []
+        for subc in ParamFile.__subclasses__():
+            fpaths.extend(subc.__dict__.get("_filepath", None))
+            templates.extend(subc.__dict__.get("_template", None))
+            classnames.append(subc.__name__)
+        ParamFile.filepath = fpaths
+        ParamFile.filepath_exists = [x.exists() for x in fpaths]
+        ParamFile.filename = [x.name for x in fpaths]
+        ParamFile.folderpath = [x.parent for x in fpaths]
+        ParamFile.template = templates
+        ParamFile._classname = classnames
 
     @classmethod
     def init_class(
@@ -110,10 +199,12 @@ class ParamFile:
             cls.filename = filepath.name
             cls.folderpath = filepath.parent
             cls.filepath = cls.folderpath.joinpath(cls.filename)
+            cls.filepath_exists = cls.filepath.exists()
         else:
             cls.filename = filename or cls.default_filename
             cls.folderpath = folderpath or cls.default_folderpath
             cls.filepath = Path(cls.folderpath).joinpath(cls.filename)
+            cls.filepath_exists = cls.filepath.exists()
 
     @classmethod
     def set_template(cls, template: dict = None) -> None:
@@ -133,6 +224,8 @@ class ParamFile:
         else:
             template = {**cls.default_template, **template}
         cls.template.update(template)
+
+        cls._classname = cls.__name__
 
     @classmethod
     def write(cls, pars: dict) -> None:
@@ -156,7 +249,10 @@ class ParamFile:
 
     @classmethod
     def read(cls, key: str = None) -> Union[dict, Any]:
-        """Read Parameter file. will return the template if no file is found
+        """Read Parameter file.
+        Base class behavior: Will return the param file if only one param file is found
+            among allchildren classes
+        Subclass behavior:Will return
 
         Args:
             key (str, optional): Return only a specific key. Defaults to None.
@@ -164,12 +260,12 @@ class ParamFile:
         Returns:
             Union[dict, Any]: Dict with param values OR value of the requested key
         """
-        if isinstance(cls.filepath, list):
-            ...
+        if cls.check_base_class():
+            return cls.read_base_class()
 
         if not cls.filepath.exists():
-            log.debug("Not found: .iblrigcore_params.json creating...")
-            return cls.template
+            log.error(f"Not found: {cls.filepath} does not exist")
+            return
 
         with open(cls.filepath, "r") as f:
             pars = json.load(f)
@@ -179,21 +275,26 @@ class ParamFile:
         else:
             return pars[key]
 
-    @classmethod
-    def _set_base_attributes(cls) -> None:
-        """Finds the existing filepaths and templates of any ParamFile children.
-        Sets the base class attributes based on the existing subclass attributes.
-        """
-        fpaths = []
-        templates = []
-        for subc in cls.__subclasses__():
-            fpaths.append(subc.__dict__.get("filepath", None))
-            templates.append(subc.__dict__.get("template", None))
+    @staticmethod
+    def read_base_class() -> Union[dict, List[dict]]:
+        """Reads all the parameter files that exist on the system.
+        NB: there should only be one file to read from on any given acquisition computer.
 
-        ParamFile.filepath = fpaths
-        ParamFile.filename = [x.name for x in fpaths]
-        ParamFile.folderpath = [x.parent for x in fpaths]
-        ParamFile.template = templates
+        Returns:
+            Union[dict, List[dict]]: Dict with param values OR list with dicts.
+        """
+        subclasses = list(ParamFile.__subclasses__())
+        pfiles = [p.read() for p in subclasses]
+        assert len(subclasses) == len(pfiles), "Not all pars files read"
+        valid_params = {x.__name__: y for x, y in zip(subclasses, pfiles) if y is not None}
+        if not valid_params:
+            log.warning("No valid ParamFiles found.")
+        elif len(valid_params) == 1:
+            log.info(f"Returning params of {[k for k in valid_params]} only found ParamFile.")
+        else:
+            log.info(f"Returning params of {[k for k in valid_params]} ParamFiles.")
+        return valid_params
+
 
     @classmethod
     def update(cls, new_pars: dict) -> None:
@@ -202,6 +303,10 @@ class ParamFile:
         Args:
             new_pars (dict): Partial dict to update the existing one
         """
+        if not cls.filepath_exists:
+            log.error(f"Not found: {cls.filepath} does not exist")
+            return
+
         log.debug(f"Updating {cls.filename} with {new_pars}")
         # Possible checks for unupdatable params?
         old_pars = cls.read()
@@ -216,6 +321,16 @@ class ParamFile:
             shutil.move(cls.filepath, cls.filepath.parent.joinpath(cls.filename + ".bak"))
         else:
             log.debug("ParamFile not found, nothing to backup")
+
+    @classmethod
+    def restore_from_backup(cls) -> None:
+        """Restores the original file from the backup"""
+        backup_filepath = cls.filepath.parent.joinpath(cls.filename + ".bak")
+        if backup_filepath.exists():
+            log.debug(f"Restoring {cls.filepath} from backup")
+            shutil.move(backup_filepath, cls.filepath)
+        else:
+            log.debug("Cannot restore, backup file not found")
 
     @classmethod
     def delete(cls) -> None:
@@ -240,7 +355,6 @@ class ParamFile:
 
 
 class VideoParamFile(ParamFile):
-    # __metaclass__ = ParamFile
     def __init__(self, *args, **kwargs):
         self.video_fname = ".videopc_params.json"
         self.video_params = {
@@ -254,7 +368,6 @@ class VideoParamFile(ParamFile):
 
 
 class EphysParamFile(ParamFile):
-    # __metaclass__ = ParamFile
     def __init__(self, *args, **kwargs) -> None:
         self.ephys_fname = ".ephyspc_params.json"
         self.ephys_params = {
@@ -268,7 +381,7 @@ class EphysParamFile(ParamFile):
 ParamFile()
 VideoParamFile()
 EphysParamFile()
-
+ParamFile.read()
 
 
 # print("BaseClass-default\n", ParamFile.default_template)

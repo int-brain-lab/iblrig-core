@@ -8,12 +8,12 @@ import socket
 from datetime import datetime
 from pathlib import Path
 
-from iblrigcore.params import ParamFile
+from iblrigcore.params import BaseParamFile
 
 
 def modality() -> str:
     """return the name of the modality"""
-    return ParamFile.read(key='MODALITY')
+    return BaseParamFile.read(key='MODALITY')
 
 
 def timestamp() -> str:

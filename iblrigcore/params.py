@@ -426,7 +426,11 @@ class BehaviorParamFile(ParamFile):
             return Path(ph.get_iblrig_params_folder())
         except ModuleNotFoundError:
             log.debug("iblrig not installed, falling back to default params folder")
-            return BehaviorParamFile.default_folderpath
+            import platform
+            if platform.uname().node == 'pfc':
+                return Path("/home/nico/Projects/IBL/int-brain-lab/iblrig_params")
+            else:
+                return BehaviorParamFile.default_folderpath
 
 ParamFile()
 VideoParamFile()
@@ -434,6 +438,7 @@ EphysParamFile()
 ParamFile.read()
 BehaviorParamFile()
 
+# TODO: implement default values and auto updatable values on read/write
 
 # print("BaseClass-default\n", ParamFile.default_template)
 # print("BaseClass\n", ParamFile.template)

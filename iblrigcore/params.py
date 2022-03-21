@@ -95,10 +95,12 @@ class MetaParamFile(type):
         cls._classname = cls._parse_value(value)
 
     def check_base_class(cls):
-        return cls.__name__ == 'ParamFile'
+        return cls.__name__ == "ParamFile"
+
 
 class Bla(object, metaclass=MetaParamFile):
     ...
+
 
 class ParamFile(object, metaclass=MetaParamFile):
     """Simple Parameter file interaction class. Creates a class factory that
@@ -107,6 +109,7 @@ class ParamFile(object, metaclass=MetaParamFile):
     Returns:
         _type_: _description_
     """
+
     # def __new__(cls):
     #     ParamFile._set_base_attributes()
     #     return cls
@@ -295,7 +298,6 @@ class ParamFile(object, metaclass=MetaParamFile):
             log.info(f"Returning params of {[k for k in valid_params]} ParamFiles.")
         return valid_params
 
-
     @classmethod
     def update(cls, new_pars: dict) -> None:
         """Update Param file with new_pars
@@ -357,12 +359,12 @@ class ParamFile(object, metaclass=MetaParamFile):
 class VideoParamFile(ParamFile):
     def __init__(self, *args, **kwargs):
         self.video_fname = ".videopc_params.json"
-        self.video_params = {
+        self.video_template = {
             "BODY_CAM_IDX": int,
             "LEFT_CAM_IDX": int,
             "RIGHT_CAM_IDX": int,
         }
-        self.init_class(filename=self.video_fname, template=self.video_params)
+        self.init_class(filename=self.video_fname, template=self.video_template)
         # super(VideoParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
@@ -370,18 +372,67 @@ class VideoParamFile(ParamFile):
 class EphysParamFile(ParamFile):
     def __init__(self, *args, **kwargs) -> None:
         self.ephys_fname = ".ephyspc_params.json"
-        self.ephys_params = {
+        self.ephys_template = {
             "PROBE_TYPE_00": int,
             "PROBE_TYPE_01": int,
         }
-        self.init_class(filename=self.ephys_fname, template=self.ephys_params)
+        self.init_class(filename=self.ephys_fname, template=self.ephys_template)
         # super(EphysParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
+
+
+class BehaviorParamFile(ParamFile):
+    """For now requires iblrig to be installed
+    TODO: migrate all path habndling funcs to iblrigcore/paths.py"""
+    def __init__(self, *args, **kwargs) -> None:
+        self.behavior_fname = ".iblrig_params.json"
+        self.behavior_folderpath = self._get_folderpath()
+        self.behavior_template = {
+            "NAME": str,
+            "IBLRIG_VERSION": str,
+            "COM_BPOD": str,
+            "COM_ROTARY_ENCODER": str,
+            "COM_F2TTL": str,
+            "F2TTL_HW_VERSION": float,
+            "F2TTL_DARK_THRESH": float,
+            "F2TTL_LIGHT_THRESH": float,
+            "F2TTL_CALIBRATION_DATE": str,
+            "SCREEN_FREQ_TARGET": int,  # (Hz)
+            "SCREEN_FREQ_TEST_STATUS": str,
+            "SCREEN_FREQ_TEST_DATE": str,
+            "SCREEN_LUX_VALUE": float,
+            "SCREEN_LUX_DATE": str,
+            "WATER_CALIBRATION_RANGE": List[float],  # [min, max]
+            "WATER_CALIBRATION_OPEN_TIMES": List[float],  # [float, float, ...]
+            "WATER_CALIBRATION_WEIGHT_PERDROP": List[float],  # [float, float, ...]
+            "WATER_CALIBRATION_DATE": str,
+            "BPOD_TTL_TEST_STATUS": str,
+            "BPOD_TTL_TEST_DATE": str,
+            "DATA_FOLDER_LOCAL": str,
+            "DATA_FOLDER_REMOTE": str,
+            "DISPLAY_IDX": int,
+        }
+        self.init_class(
+            filename=self.behavior_fname,
+            folderpath=self.behavior_folderpath,
+            template=self.behavior_template,
+        )
+        # super(EphysParamFile, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def _get_folderpath(self) -> Path:
+        try:
+            import iblrig.path_helper as ph
+            return Path(ph.get_iblrig_params_folder())
+        except ModuleNotFoundError:
+            log.debug("iblrig not installed, falling back to default params folder")
+            return BehaviorParamFile.default_folderpath
 
 ParamFile()
 VideoParamFile()
 EphysParamFile()
 ParamFile.read()
+BehaviorParamFile()
 
 
 # print("BaseClass-default\n", ParamFile.default_template)

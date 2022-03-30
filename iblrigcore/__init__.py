@@ -35,4 +35,4 @@ Default parameter configuration:
     - Log transfer_status as ended/validated
     - Check create a raw_session.flag to initiate the pipeline
 """
-import iblrigcore.logging_
+import iblrigcore.logging_  # noqa

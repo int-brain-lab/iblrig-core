@@ -7,13 +7,14 @@ import inspect
 import socket
 from datetime import datetime
 from pathlib import Path
+from sys import flags
 
-from iblrigcore.params import BaseParamFile
+from iblrigcore.params import ParamFile
 
 
 def modality() -> str:
     """return the name of the modality"""
-    return BaseParamFile.read(key='MODALITY')
+    return ParamFile.read(key='MODALITY')
 
 
 def timestamp() -> str:

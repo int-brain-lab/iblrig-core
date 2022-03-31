@@ -31,7 +31,7 @@ def test_load_status_file():
     sync_status.create_status_file(tempdir.name)
     status_file = sync_status.load_status_file(tempdir.name)
     assert status_file is not None
-    header = ["Timestamp", "ComputerName", "Caller", "Action"]
+    header = ["Timestamp", "ComputerName", "Caller", "Modality", "Action"]
     assert header in status_file
     status_file = sync_status.load_status_file(tempdir.name, header=False)
     assert header not in status_file

@@ -45,7 +45,7 @@ def caller_old(fullpath: bool = True) -> str:
     Returns:
         str: fullpath/caller_name OR filename/caller_name
     """
-    stack = inspect.stack()modality
+    stack = inspect.stack()
     name = stack[1][3]  # caller's name or stack[1].function
     fname = stack[1][0].f_code.co_filename
     # name = stack[1][0].f_code.co_name

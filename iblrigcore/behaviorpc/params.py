@@ -66,11 +66,5 @@ class BehaviorParamFile(ParamFile):
             else:
                 return BehaviorParamFile.default_folderpath
 
-BehaviorParamFile()
 
 # TODO: implement default values and auto updatable values on read/write
-
-
-if __name__ == "__main__":
-    BehaviorParamFile.create()
-    print(0)

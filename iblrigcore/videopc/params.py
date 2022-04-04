@@ -16,10 +16,3 @@ class VideoParamFile(ParamFile):
         self._init_class(filename=self.video_fname, template=self.video_template)
         # super(VideoParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
-
-VideoParamFile()
-
-
-if __name__ == "__main__":
-    VideoParamFile.create()
-    print(0)

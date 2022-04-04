@@ -15,11 +15,3 @@ class EphysParamFile(ParamFile):
         self._init_class(filename=self.filename, template=self.template)
         # super(EphysParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
-
-
-EphysParamFile()
-
-
-if __name__ == "__main__":
-    EphysParamFile.create()
-    print(0)

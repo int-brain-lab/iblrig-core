@@ -36,3 +36,17 @@ Default parameter configuration:
     - Check create a raw_session.flag to initiate the pipeline
 """
 import iblrigcore.logging_  # noqa
+
+# Import all bilrigcore params classes to register them in the ParamFile class
+from iblrigcore.params import ParamFile  # noqa
+from iblrigcore.videopc.params import VideoParamFile
+from iblrigcore.ephyspc.params import EphysParamFile
+from iblrigcore.photometrypc.params import PhotometryParamFile
+# from iblrigcore.behaviorpc.params import BehaviorParamFile
+
+# Initialize all classes
+ParamFile()
+VideoParamFile()
+EphysParamFile()
+PhotometryParamFile()
+# BehaviorParamFile()

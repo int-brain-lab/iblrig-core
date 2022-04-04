@@ -14,4 +14,5 @@ Development requirements:
 - flake8
 - black
 - pytest
+- pytest-cov
 - colorlog

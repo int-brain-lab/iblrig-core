@@ -35,10 +35,34 @@ using the REMOTE_DATA_FOLDER root path and the current session relative path.
 
 """
 from iblrigcore.params import ParamFile
+from pathlib import Path
 
 
 def get_session_number(mousename):
     """
-    This function should return the session number of the current session.
+    This function should return the session number of the current running session.
+    Or the new session number if no session is running.
     """
     pars = ParamFile.read()
+
+
+def list_mouse_sessions(mousename, folder_type="remote"):
+    """
+    This function should return a list of all the sessions of the inputted mousename.
+    """
+    pars = ParamFile.read()
+    if folder_type == "remote":
+        root_folder = pars["DATA_FOLDER_REMOTE"]
+    elif folder_type == "local":
+        root_folder = pars["DATA_FOLDER_LOCAL"]
+    elif isinstance(folder_type, Path):
+        root_folder = folder_type
+    else:
+        raise ValueError("folder_type must be either 'remote', 'local', or a Path object")
+    root_folder = Path(root_folder)
+    mouse_folder = root_folder.joinpath(mousename)
+    if not mouse_folder.exists():
+        return []
+    sessions =  [p for p in mouse_folder.rglob("*") if len(p.name) == 3 and p.name.isdecimal()]
+
+    return sessions

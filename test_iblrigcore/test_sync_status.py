@@ -5,10 +5,8 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 from iblrigcore import sync_status
 from iblrigcore.sync_status import caller
-from pytest import skip
 
 
 def test_timestamp():

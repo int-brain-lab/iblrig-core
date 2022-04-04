@@ -234,7 +234,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         cls._classname = cls.__name__
 
     @staticmethod
-    def read_params_file() -> Union[dict, List[dict]]:
+    def read_params_file(key: str = "") -> Union[dict, List[dict]]:
         """Reads all the parameter files that exist on the system.
         NB: there should only be one file to read from on any given acquisition computer.
 
@@ -248,10 +248,11 @@ class ParamFile(object, metaclass=MetaParamFile):
         if not valid_params:
             log.warning("No valid ParamFiles found.")
         elif len(valid_params) == 1:
-            log.info(f"Returning params of {[k for k in valid_params]} only found ParamFile.")
+            log.info(f"Returning {[k for k in valid_params][0]} params.")
+            valid_params = valid_params[list(valid_params.keys())[0]]
         else:
-            log.info(f"Returning params of {[k for k in valid_params]} ParamFiles.")
-        return valid_params
+            log.info(f"Returning {[k for k in valid_params]} all ParamFiles.")
+        return valid_params[key] if key else valid_params
 
     @classmethod
     def write(cls, pars: dict) -> None:
@@ -287,7 +288,7 @@ class ParamFile(object, metaclass=MetaParamFile):
             Union[dict, Any]: Dict with param values OR value of the requested key
         """
         if cls.check_base_class():
-            return cls.read_params_file()
+            return cls.read_params_file(key=key)
 
         if not cls.filepath.exists():
             log.debug(f"Not found: {cls.filepath} does not exist")

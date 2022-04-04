@@ -35,28 +35,6 @@ def computer_name() -> str:
     return socket.gethostname()
 
 
-def caller_old(fullpath: bool = True) -> str:
-    """returns the filename/caller of the function calling this function
-    Has to be imported as a function e.g. from iblrigcore.sync_status import caller
-
-    Args:
-        fullpath (bool, optional): return the full path of the module.
-                               Defaults to True.
-
-    Returns:
-        str: fullpath/caller_name OR filename/caller_name
-    """
-    stack = inspect.stack()
-    name = stack[1][3]  # caller's name or stack[1].function
-    fname = stack[1][0].f_code.co_filename
-    # name = stack[1][0].f_code.co_name
-    # locals_ = stack[1][0].f_locals
-    del stack
-    short_name = "/".join([Path(fname).name, name])
-    long_name = "/".join([fname, name])
-    return short_name if not fullpath else long_name
-
-
 def caller(skip: int = 2) -> str:
     """Get a name of a caller in the format module.class.method
 

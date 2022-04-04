@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from iblrigcore import sync_status
-from iblrigcore.sync_status import caller_old, caller
+from iblrigcore.sync_status import caller
 from pytest import skip
 
 
@@ -23,6 +23,8 @@ def test_create_status_file():
     tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
     sync_status.create_status_file(tempdir.name)
     assert Path(tempdir.name).joinpath("session_status.csv").exists()
+    # Test create status file when it already exists
+    sync_status.create_status_file(tempdir.name)  # Nothing happens
     tempdir.cleanup()
 
 
@@ -36,15 +38,9 @@ def test_load_status_file():
     status_file = sync_status.load_status_file(tempdir.name, header=False)
     assert header not in status_file
     tempdir.cleanup()
-
-
-@pytest.mark.skip(reason="old caller function")
-def test_caller_old():
-    fullpath = Path(__file__)
-    out = caller_old(True)
-    assert out == str(fullpath) + "/" + "test_caller"
-    out = caller_old(False)
-    assert out == str(fullpath.name) + "/" + "test_caller"
+    # Test load status file when it does not exist
+    status_file = sync_status.load_status_file(tempdir.name)
+    assert not status_file
 
 
 def test_caller():
@@ -74,3 +70,7 @@ def test_append_status_file():
     sf_data = sync_status.load_status_file(tempdir.name)
     assert sf_data[-1][-1] == "IdidSomething"
     tempdir.cleanup()
+    # status file missing test
+    sync_status.append_status_file(tempdir.name, "IdidSomething")
+    sf_data = sync_status.load_status_file(tempdir.name)
+    assert not sf_data

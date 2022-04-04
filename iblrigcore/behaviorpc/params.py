@@ -2,12 +2,13 @@
 # @File: videopc/params.py
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Wednesday, March 30th 2022, 12:10:48 pm
-import pathlib
-from iblrigcore.params import ParamFile
-import iblrigcore  # noqa
 import logging
+import pathlib
 from pathlib import Path
+from typing import List
 
+import iblrigcore  # noqa
+from iblrigcore.params import ParamFile
 
 log = logging.getLogger("iblrig")
 
@@ -20,6 +21,7 @@ class BehaviorParamFile(ParamFile):
         self.behavior_fname = ".iblrig_params.json"
         self.behavior_folderpath = self._get_folderpath()
         self.behavior_template = {
+            "MODALITY": "behavior",
             "NAME": str,
             "IBLRIG_VERSION": str,
             "COM_BPOD": str,

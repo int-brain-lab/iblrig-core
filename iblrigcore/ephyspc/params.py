@@ -9,6 +9,7 @@ class EphysParamFile(ParamFile):
     def __init__(self, *args, **kwargs) -> None:
         self.filename = ".ephyspc_params.json"
         self.template = {
+            "MODALITY": "ephys",
             "PROBE_TYPE_00": int,
             "PROBE_TYPE_01": int,
         }

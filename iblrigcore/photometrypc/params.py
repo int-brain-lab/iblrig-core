@@ -10,6 +10,7 @@ class PhotometryParamFile(ParamFile):
     def __init__(self, *args, **kwargs):
         self.flnm = ".photometrypc_params.json"
         self.tmplt = {
+            "MODALITY": "photometry",
             "PATCH_CORDS": List,
             "PHOTOMETRY_DEVICE": str,
         }

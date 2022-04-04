@@ -290,7 +290,7 @@ class ParamFile(object, metaclass=MetaParamFile):
             return cls.read_params_file()
 
         if not cls.filepath.exists():
-            log.error(f"Not found: {cls.filepath} does not exist")
+            log.debug(f"Not found: {cls.filepath} does not exist")
             return
 
         with open(cls.filepath, "r") as f:
@@ -401,12 +401,8 @@ class ParamFile(object, metaclass=MetaParamFile):
         """Validate the types of the current param file against the template
         Returns True if the current param file matches the template
         """
-        template = {k: str(v) for k, v in cls.template.items()}
         current = cls.read()
         return all([isinstance(current[k], cls.template[k]) for k in cls.template])
 
-
-ParamFile()
-"."
 # TODO: Create decorator to avoid running BaseClass methods that require initialization
 # https://stackoverflow.com/questions/25828864/catch-before-after-function-call-events-for-all-functions-in-class

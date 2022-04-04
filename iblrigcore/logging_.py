@@ -8,7 +8,6 @@ Configuration for logging
 """
 import logging
 
-USE_LOGGING = True
 LOGLEVEL = logging.DEBUG
 
 
@@ -20,10 +19,7 @@ def logger_config(name=None):
     """
         Setup the logging environment
     """
-    if not name:
-        lc_log = logging.getLogger()  # root logger
-    else:
-        lc_log = logging.getLogger(name)
+    lc_log = logging.getLogger() if not name else logging.getLogger(name)
     lc_log.setLevel(logging.INFO)
     format_str = "%(asctime)s.%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s"
     date_format = "%Y-%m-%d %H:%M:%S"
@@ -42,9 +38,5 @@ def logger_config(name=None):
     return lc_log
 
 
-if USE_LOGGING:
-    log = logger_config(name="iblrig")
-    log.setLevel(LOGLEVEL)
-else:
-    # deactivate all log calls for use as a library
-    logging.getLogger("iblrig").addHandler(logging.NullHandler())
+log = logger_config(name="iblrig")
+log.setLevel(LOGLEVEL)

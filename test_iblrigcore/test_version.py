@@ -4,4 +4,5 @@
 # @Date: Wednesday, February 23rd 2022, 3:22:39 pm
 def test_version():
     import iblrigcore
+
     assert iblrigcore.__version__

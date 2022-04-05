@@ -131,3 +131,5 @@ dmypy.json
 # IDEs
 .idea/
 .vscode/
+
+scratch/

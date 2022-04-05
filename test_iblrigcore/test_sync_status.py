@@ -9,6 +9,7 @@ from iblrigcore import sync_status
 from iblrigcore.sync_status import caller
 
 
+#FIXME: import params and create then delete at end of test module
 def test_timestamp():
     assert isinstance(sync_status.timestamp(), str)
 

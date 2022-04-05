@@ -10,6 +10,7 @@ from iblrigcore import sync_status
 import iblrigcore.session_number as sn
 
 
+#FIXME: import params and create then delete at end of test module
 def create_fake_sessions(tempdir, mousename):
     tempdir_path = Path(tempdir.name)
     old = [mousename, "2000-01-01", "001"]

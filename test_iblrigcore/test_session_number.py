@@ -40,6 +40,6 @@ def test_list_mouse_sessions():
     create_fake_sessions(tempdir, mousename)
 
     sessions = sn.list_mouse_sessions(mousename, folder_type=Path(tempdir.name))
-    assert len(sessions) == 3
+    assert len(sessions) == 4
 
     tempdir.cleanup()

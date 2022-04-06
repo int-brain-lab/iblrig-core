@@ -36,6 +36,75 @@ using the REMOTE_DATA_FOLDER root path and the current session relative path.
 """
 from iblrigcore.params import ParamFile
 from pathlib import Path
+import datetime
+from dateutil import parser
+from typing import Tuple, Union
+
+
+def session_path_sort_func(p: Path) -> Tuple[datetime.datetime, int]:
+    """Sort session paths by parsed date and number
+
+    Args:
+        p (Path): valid session_path ending in subject/date/number
+
+    Returns:
+        Tuple[datetime.datetime, int]: date and number of a session path object
+    """
+    p = Path(p)
+    date = p.parts[-2]
+    # Some date folders might have a '_' in them, so we need to remove it
+    if "_" in date:
+        date = date.replace("_", ":")
+    date = parser.parse(date)
+    number = int(p.parts[-1])
+    return date, number
+
+
+def is_session_path(p: Path) -> bool:
+    """Check if a path is a valid session path.
+    A session path is defined as any folder under the root_folder with the format:
+    mousename/date/number.
+
+    Args:
+        p (Path): path to check
+
+    Returns:
+        bool: True if the path is a valid session path, False otherwise
+    """
+    # Must be a directory
+    if not p.is_dir():
+        return False
+    # Must be a length 3 name composed by base 10 digits
+    if not p.parts[-1].isdecimal():
+        return False
+    if len(p.parts[-1]) != 3:
+        return False
+    # Must be a valid date or datetime isoformatted
+    # TODO: FINISH ME!
+    return True
+
+
+def list_mouse_sessions(mousename: str, root_folder: Union[str, Path]) -> list:
+    """This function should return a list of all the sessions paths of the inputted mousename.
+
+    Args:
+        mousename (str): mouse name
+        root_folder (Union[str, Path]): Root Subjects/ data folder, usually
+                                        DATA_FOLDER_LOCAL or DATA_FOLDER_REMOTE
+
+    Returns:
+        list: list of session paths sorted by date and number
+    """
+    root_folder = Path(root_folder)
+    mouse_folder = root_folder.joinpath(mousename)
+    if not mouse_folder.exists():
+        return []
+    # Grab only folders that end in a 3 digit number
+    sessions = [p for p in mouse_folder.rglob("*") if len(p.name) == 3 and p.name.isdecimal()]
+    # sessions = sorted(sessions, key=lambda x: (parser.parse(x.parts[-2]), int(x.parts[-1])))
+    # list.sort() is inplace and seems to be about 3% faster than sorted()
+    sessions.sort(key=session_path_sort_func)
+    return sessions
 
 
 def get_session_number(mousename):
@@ -46,23 +115,3 @@ def get_session_number(mousename):
     pars = ParamFile.read()
 
 
-def list_mouse_sessions(mousename, folder_type="remote"):
-    """
-    This function should return a list of all the sessions of the inputted mousename.
-    """
-    pars = ParamFile.read()
-    if folder_type == "remote":
-        root_folder = pars["DATA_FOLDER_REMOTE"]
-    elif folder_type == "local":
-        root_folder = pars["DATA_FOLDER_LOCAL"]
-    elif isinstance(folder_type, Path):
-        root_folder = folder_type
-    else:
-        raise ValueError("folder_type must be either 'remote', 'local', or a Path object")
-    root_folder = Path(root_folder)
-    mouse_folder = root_folder.joinpath(mousename)
-    if not mouse_folder.exists():
-        return []
-    sessions =  [p for p in mouse_folder.rglob("*") if len(p.name) == 3 and p.name.isdecimal()]
-
-    return sessions

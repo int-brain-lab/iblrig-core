@@ -44,5 +44,8 @@ def test_list_mouse_sessions():
 
     sessions = sn.list_mouse_sessions(mousename, folder_type=Path(tempdir.name))
     assert len(sessions) == 4
-
+    # Test if the list is sorted
+    assert sessions[-1] == Path(tempdir.name).joinpath(
+        mousename, datetime.now().date().isoformat(), "002"
+    )
     tempdir.cleanup()

@@ -329,9 +329,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         """Backup Param file, only one version back supported"""
         if cls.filepath.exists():
             log.debug(f"Backing up {cls.filepath}...")
-            shutil.move(cls.filepath, cls.filepath.parent.joinpath(cls.filename + ".bak"))
-        else:
-            log.debug("ParamFile not found, nothing to backup")
+            shutil.copy2(cls.filepath, cls.filepath.parent.joinpath(cls.filename + ".bak"))
 
     @classmethod
     def restore_from_backup(cls) -> None:

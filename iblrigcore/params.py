@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 from typing import Any, List, Union, List
 
-import iblrigcore
+import iblrigcore  # noqa
 
 log = logging.getLogger("iblrig")
 
@@ -247,6 +247,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         valid_params = {x.__name__: y for x, y in zip(subclasses, pfiles) if y is not None}
         if not valid_params:
             log.warning("No valid ParamFiles found.")
+            return
         elif len(valid_params) == 1:
             log.info(f"Returning {[k for k in valid_params][0]} params.")
             valid_params = valid_params[list(valid_params.keys())[0]]

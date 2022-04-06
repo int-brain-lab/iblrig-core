@@ -121,4 +121,11 @@ def test_ParamFile_IO():
     bla = Bla()
     bla.delete()
 def test_ParamFile_multiple():
+    #TODO: THIS!
+    # Implement acquisition PC that has more than one configuration/param file
+    # might need to change the ParamFile class to be able to handle multiple
+    # chilren params in the same machine.
+    # ParamFile.read_params_file(key="MODALITY") should get the info from a
+    # class attribute of the base class that is initialized with the calssmethod\
+    # ParamFile.in_use()
     ...

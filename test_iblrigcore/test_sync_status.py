@@ -10,7 +10,12 @@ from iblrigcore.sync_status import caller
 from iblrigcore.photometrypc.params import PhotometryParamFile
 
 
-#FIXME: import params and create then delete at end of test module
+def test_modality():
+    PhotometryParamFile.create(populate=False)
+    assert sync_status.modality() == "photometry"
+    PhotometryParamFile.delete()
+
+
 def test_timestamp():
     assert isinstance(sync_status.timestamp(), str)
 

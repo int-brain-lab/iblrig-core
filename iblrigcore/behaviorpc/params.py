@@ -3,7 +3,6 @@
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Wednesday, March 30th 2022, 12:10:48 pm
 import logging
-import pathlib
 from pathlib import Path
 from typing import List
 

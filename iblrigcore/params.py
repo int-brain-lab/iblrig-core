@@ -368,8 +368,6 @@ class ParamFile(object, metaclass=MetaParamFile):
         """Allows you to create a new param file in the folderpath."""
         cls.folderpath.mkdir(exist_ok=True)
 
-        # Preserve the old file
-        cls.backup()
         filepath = cls.filepath
         template = {k: str(v) for k, v in cls.template.items()}
         cls.write(template)

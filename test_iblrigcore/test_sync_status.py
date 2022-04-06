@@ -7,6 +7,7 @@ from pathlib import Path
 
 from iblrigcore import sync_status
 from iblrigcore.sync_status import caller
+from iblrigcore.photometrypc.params import PhotometryParamFile
 
 
 #FIXME: import params and create then delete at end of test module
@@ -19,16 +20,19 @@ def test_computer_name():
 
 
 def test_create_status_file():
+    PhotometryParamFile.create(populate=False)
     tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
     sync_status.create_status_file(tempdir.name)
     assert Path(tempdir.name).joinpath("session_status.csv").exists()
     # Test create status file when it already exists
     sync_status.create_status_file(tempdir.name)  # Nothing happens
     tempdir.cleanup()
+    PhotometryParamFile.delete()
 
 
 def test_load_status_file():
     tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
+    PhotometryParamFile.create(populate=False)
     sync_status.create_status_file(tempdir.name)
     status_file = sync_status.load_status_file(tempdir.name)
     assert status_file is not None
@@ -40,6 +44,7 @@ def test_load_status_file():
     # Test load status file when it does not exist
     status_file = sync_status.load_status_file(tempdir.name)
     assert not status_file
+    PhotometryParamFile.delete()
 
 
 def test_caller():
@@ -64,6 +69,7 @@ def test_caller_one_level_deeper():
 
 def test_append_status_file():
     tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
+    PhotometryParamFile.create(populate=False)
     sync_status.create_status_file(tempdir.name)
     sync_status.append_status_file(tempdir.name, "IdidSomething")
     sf_data = sync_status.load_status_file(tempdir.name)
@@ -73,3 +79,4 @@ def test_append_status_file():
     sync_status.append_status_file(tempdir.name, "IdidSomething")
     sf_data = sync_status.load_status_file(tempdir.name)
     assert not sf_data
+    PhotometryParamFile.delete()

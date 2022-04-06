@@ -2,16 +2,17 @@
 # @File: test_iblrigcore/test_session_number.py
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Monday, April 4th 2022, 4:20:40 pm
-from datetime import datetime
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
-from iblrigcore import sync_status
 import iblrigcore.session_number as sn
+from iblrigcore import sync_status
+from iblrigcore.photometrypc.params import PhotometryParamFile
 
 
-#FIXME: import params and create then delete at end of test module
 def create_fake_sessions(tempdir, mousename):
+    PhotometryParamFile.create(populate=False)
     tempdir_path = Path(tempdir.name)
     old = [mousename, "2000-01-01", "001"]
     old2 = [mousename, "2000-01-01", "002"]
@@ -29,6 +30,7 @@ def create_fake_sessions(tempdir, mousename):
     sync_status.append_status_file(tempdir_path.joinpath(*old2), "IdidSomething")
     sync_status.append_status_file(tempdir_path.joinpath(*one), "IdidSomethingToday")
     sync_status.append_status_file(tempdir_path.joinpath(*two), "IamDoingSomething")
+    PhotometryParamFile.delete()
 
     return tempdir
 

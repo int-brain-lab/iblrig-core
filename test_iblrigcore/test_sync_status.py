@@ -5,15 +5,18 @@
 import tempfile
 from pathlib import Path
 
+import pytest
 from iblrigcore import sync_status
-from iblrigcore.sync_status import caller
 from iblrigcore.photometrypc.params import PhotometryParamFile
+from iblrigcore.sync_status import caller
 
 
 def test_modality():
     PhotometryParamFile.create(populate=False)
     assert sync_status.modality() == "photometry"
     PhotometryParamFile.delete()
+    with pytest.raises(ValueError):
+        sync_status.modality()
 
 
 def test_timestamp():

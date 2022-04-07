@@ -42,7 +42,7 @@ from typing import Tuple, Union
 
 
 def session_path_sort_func(p: Path) -> Tuple[datetime.datetime, int]:
-    """Sort session paths by parsed date and number
+    """Sort session paths by subject, parsed date, and number
 
     Args:
         p (Path): valid session_path ending in subject/date/number
@@ -51,22 +51,25 @@ def session_path_sort_func(p: Path) -> Tuple[datetime.datetime, int]:
         Tuple[datetime.datetime, int]: date and number of a session path object
     """
     p = Path(p)
+    subj = p.parts[-3]
     date = p.parts[-2]
     # Some date folders might have a '_' in them, so we need to remove it
     if "_" in date:
         date = date.replace("_", ":")
     date = parser.parse(date)
     number = int(p.parts[-1])
-    return date, number
+    return subj, date, number
 
 
 def is_session_path(p: Path) -> bool:
     """Check if a path is a valid session path.
     A session path is defined as any folder under the root_folder with the format:
     mousename/date/number.
+    No way currently to check if mousename is a valid mouse name without more info
+    or checking the DB.
 
     Args:
-        p (Path): path to check
+        p (Path): path to check, can be a folder or a file
 
     Returns:
         bool: True if the path is a valid session path, False otherwise
@@ -79,12 +82,31 @@ def is_session_path(p: Path) -> bool:
         return False
     if len(p.parts[-1]) != 3:
         return False
-    # Must be a valid date or datetime isoformatted
-    # TODO: FINISH ME!
+    # Must be a valid isoformatted date string
+    try:
+        parser.parse(p.parts[-2])
+    except ValueError:
+        return False
     return True
 
 
-def list_mouse_sessions(mousename: str, root_folder: Union[str, Path]) -> list:
+def list_sessions(root_folder: Union[str, Path]) -> list:
+    """This function should return a list of all the sessions paths of all the mice.
+
+    Args:
+        root_folder (Union[str, Path]): Root Subjects/ data folder, usually
+                                        DATA_FOLDER_LOCAL or DATA_FOLDER_REMOTE
+
+    Returns:
+        list: list of session paths sorted by date and number
+    """
+    root_folder = Path(root_folder)
+    sessions = [p for p in root_folder.rglob("*") if is_session_path(p)]
+    sessions.sort(key=session_path_sort_func)
+    return sessions
+
+
+def list_mouse_sessions(root_folder: Union[str, Path], mousename: str) -> list:
     """This function should return a list of all the sessions paths of the inputted mousename.
 
     Args:
@@ -95,16 +117,9 @@ def list_mouse_sessions(mousename: str, root_folder: Union[str, Path]) -> list:
     Returns:
         list: list of session paths sorted by date and number
     """
-    root_folder = Path(root_folder)
-    mouse_folder = root_folder.joinpath(mousename)
-    if not mouse_folder.exists():
-        return []
-    # Grab only folders that end in a 3 digit number
-    sessions = [p for p in mouse_folder.rglob("*") if len(p.name) == 3 and p.name.isdecimal()]
-    # sessions = sorted(sessions, key=lambda x: (parser.parse(x.parts[-2]), int(x.parts[-1])))
-    # list.sort() is inplace and seems to be about 3% faster than sorted()
-    sessions.sort(key=session_path_sort_func)
-    return sessions
+    sessions = list_sessions(root_folder)
+    mouse_sessions = [p for p in sessions if mousename in str(p)]
+    return mouse_sessions
 
 
 def get_session_number(mousename):
@@ -114,4 +129,24 @@ def get_session_number(mousename):
     """
     pars = ParamFile.read()
 
+
+# import time
+
+# root_folder = Path('/home/nico/')
+
+# parsed = 0
+# out = []
+# start = time.time()
+# for p in root_folder.rglob("*"):
+#     parsed += 1
+#     if is_session_path(p):
+#         out.append(p)
+# stop = time.time()
+
+# # sessions = [p for p in root_folder.rglob("*") if is_session_path(p)]
+# print(f"Parsed {parsed} paths in {stop - start} seconds\n")
+# # Parsed 177466 paths in 3.2528727054595947 seconds
+# # Parsed 2421933 paths in 51.873934745788574 seconds
+# # Parsed 2422126 paths in 46.614375829696655 seconds
+# root_data_folders = set([p.parent.parent.parent for p in out])
 

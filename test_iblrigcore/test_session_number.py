@@ -35,14 +35,23 @@ def create_fake_sessions(tempdir, mousename):
     return tempdir
 
 
+def test_list_sessions():
+    tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
+    # Create some sessions in the tmpdir
+    mousename = "test_mouse"
+    create_fake_sessions(tempdir, "test_mouse_2")
+    create_fake_sessions(tempdir, mousename)
+    sessions = sn.list_sessions(root_folder=Path(tempdir.name))
+    assert len(sessions) == 8
+    tempdir.cleanup()
+
 def test_list_mouse_sessions():
     tempdir = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
     mousename = "test_mouse"
     # Create some sessions in the tmpdir
-    create_fake_sessions(tempdir, "test_mouse_2")
     create_fake_sessions(tempdir, mousename)
 
-    sessions = sn.list_mouse_sessions(mousename, folder_type=Path(tempdir.name))
+    sessions = sn.list_mouse_sessions(Path(tempdir.name), mousename)
     assert len(sessions) == 4
     # Test if the list is sorted
     assert sessions[-1] == Path(tempdir.name).joinpath(

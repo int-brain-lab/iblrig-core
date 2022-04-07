@@ -1,1 +1,6 @@
 colorlog
+python-dateutil
+black
+pytest
+pytest-cov
+flake8

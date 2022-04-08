@@ -13,7 +13,7 @@ from iblrigcore.photometrypc.params import PhotometryParamFile
 
 def create_fake_sessions(tempdir, mousename):
     PhotometryParamFile.create(populate=False)
-    tempdir_path = Path(tempdir.name)
+    tempdir_path = Path(tempdir.name).joinpath("Subjects")
     old = [mousename, "2000-01-01", "001"]
     old2 = [mousename, "2000-01-01", "002"]
     one = [mousename, datetime.now().date().isoformat(), "001"]
@@ -55,6 +55,6 @@ def test_list_mouse_sessions():
     assert len(sessions) == 4
     # Test if the list is sorted
     assert sessions[-1] == Path(tempdir.name).joinpath(
-        mousename, datetime.now().date().isoformat(), "002"
+        "Subjects", mousename, datetime.now().date().isoformat(), "002"
     )
     tempdir.cleanup()

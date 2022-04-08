@@ -100,6 +100,9 @@ def list_sessions(root_folder: Union[str, Path]) -> list:
     Returns:
         list: list of session paths sorted by date and number
     """
+    # Parsed 177466 paths in 3.2528727054595947 seconds
+    # Parsed 2421933 paths in 51.873934745788574 seconds
+    # Parsed 2422126 paths in 46.614375829696655 seconds
     root_folder = Path(root_folder)
     sessions = [p for p in root_folder.rglob("*") if is_session_path(p)]
     sessions.sort(key=session_path_sort_func)
@@ -117,8 +120,14 @@ def list_mouse_sessions(root_folder: Union[str, Path], mousename: str) -> list:
     Returns:
         list: list of session paths sorted by date and number
     """
-    sessions = list_sessions(root_folder)
-    mouse_sessions = [p for p in sessions if mousename in str(p)]
+    root_folder = Path(root_folder)
+    if root_folder.name.lower() == 'Subjects':
+        subjects_path = root_folder
+    else:
+        subjects_path = root_folder.joinpath("Subjects")
+        assert subjects_path.exists(), f"Cannot find a Subject's path in {root_folder}"
+    mousename_path = subjects_path.joinpath(mousename)
+    mouse_sessions = list_sessions(mousename_path)
     return mouse_sessions
 
 
@@ -128,25 +137,3 @@ def get_session_number(mousename):
     Or the new session number if no session is running.
     """
     pars = ParamFile.read()
-
-
-# import time
-
-# root_folder = Path('/home/nico/')
-
-# parsed = 0
-# out = []
-# start = time.time()
-# for p in root_folder.rglob("*"):
-#     parsed += 1
-#     if is_session_path(p):
-#         out.append(p)
-# stop = time.time()
-
-# # sessions = [p for p in root_folder.rglob("*") if is_session_path(p)]
-# print(f"Parsed {parsed} paths in {stop - start} seconds\n")
-# # Parsed 177466 paths in 3.2528727054595947 seconds
-# # Parsed 2421933 paths in 51.873934745788574 seconds
-# # Parsed 2422126 paths in 46.614375829696655 seconds
-# root_data_folders = set([p.parent.parent.parent for p in out])
-

@@ -17,6 +17,11 @@ def test_ParamFile_base_class_initialization():
         "DATA_FOLDER_LOCAL": str,
         "DATA_FOLDER_REMOTE": str,
     }
+    default_template_values = {
+        "MODALITY": "set_me",
+        "DATA_FOLDER_LOCAL": "set_me",
+        "DATA_FOLDER_REMOTE": "set_me",
+    }
     default_filename = f".iblrigcore_params.json"
     default_folderpath = Path().home().joinpath(".iblrigcore")
     default_filepath = default_folderpath.joinpath(default_filename)
@@ -27,13 +32,14 @@ def test_ParamFile_base_class_initialization():
     _template: List[dict] = []
     _filepath: List[Path] = []
     _filepath_exists: List[bool] = []
+    _template_values: List[dict] = []
 
     # Test defaults
     assert ParamFile.default_template == default_template
     assert ParamFile.default_filename == default_filename
     assert ParamFile.default_folderpath == default_folderpath
     assert ParamFile.default_filepath == default_filepath
-
+    assert ParamFile.default_template_values == default_template_values
 
 def test_singletons__init__():
 
@@ -48,6 +54,7 @@ def test_singletons__init__():
     assert ParamFile.filename == [x.filename for x in classes]
     assert ParamFile.folderpath == [x.folderpath for x in classes]
     assert ParamFile.template == [x.template for x in classes]
+    assert ParamFile.template_values == [x.template_values for x in classes]
     assert ParamFile.filepath == [x.filepath for x in classes]
     assert ParamFile.filepath_exists == [x.filepath_exists for x in classes]
 
@@ -72,7 +79,7 @@ def test_ParamFile_IO():
 
     # Read back the file you just created and compare the content to the template
     pars = Bla.read()
-    assert pars == {k: str(v) for k, v in Bla.template.items()}
+    assert pars == Bla.template_values
 
     assert Bla.validate()
     assert Bla.validate_param_values()
@@ -120,6 +127,19 @@ def test_ParamFile_IO():
 
     bla = Bla()
     bla.delete()
+
+    # Test template values
+    class Bla(ParamFile):
+        def __init__(self, *args, **kwargs):
+            self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
+            self.template_values = {"MODALITY": "BLA",
+                                    "EXTRA": "EXTRABLA"}
+            self.template = {"EXTRA": "EXTRABLA"}
+            self._init_class(filepath=self.flpth)
+            super().__init__(*args, **kwargs)
+
+
+    bla = Bla()
 def test_ParamFile_multiple():
     #TODO: THIS!
     # Implement acquisition PC that has more than one configuration/param file

@@ -19,6 +19,12 @@ class MetaParamFile(type):
         "DATA_FOLDER_LOCAL": str,
         "DATA_FOLDER_REMOTE": str,
     }
+    default_template_values = {
+        "MODALITY": "set_me",
+        "DATA_FOLDER_LOCAL": "set_me",
+        "DATA_FOLDER_REMOTE": "set_me",
+    }
+
     default_filename = f".iblrigcore_params.json"
     default_folderpath = Path().home().joinpath(".iblrigcore")
     default_filepath = default_folderpath.joinpath(default_filename)
@@ -27,6 +33,7 @@ class MetaParamFile(type):
     _filename: List[str] = []
     _folderpath: List[Path] = []
     _template: List[dict] = []
+    _template_values: List[dict] = []
     _filepath: List[Path] = []
     _filepath_exists: List[bool] = []
 
@@ -97,6 +104,14 @@ class MetaParamFile(type):
     def classname(cls, value):
         cls._classname = cls._parse_value(value)
 
+    @property
+    def template_values(cls):
+        return cls._get_value(cls._template_values)
+
+    @template_values.setter
+    def template_values(cls, value):
+        cls._template_values = cls._parse_value(value)
+
     def check_base_class(cls):
         return cls.__name__ == "ParamFile"
 
@@ -128,13 +143,18 @@ class ParamFile(object, metaclass=MetaParamFile):
         folderpath: Path = None,
         filepath: Path = None,
         template: dict = None,
+        template_values: dict = None,
     ):
         """Guarantees the template filename and filepath class attributes are populated with the
         default values on subclassing. All logic of the Base class uses these attributes so,
         if user does not call the init_class method the subclass will still work."""
         super().__init_subclass__()
         cls._init_class(
-            filename=filename, folderpath=folderpath, filepath=filepath, template=template
+            filename=filename,
+            folderpath=folderpath,
+            filepath=filepath,
+            template=template,
+            template_values=template_values,
         )
 
     @classmethod
@@ -146,15 +166,18 @@ class ParamFile(object, metaclass=MetaParamFile):
         fpaths = []
         templates = []
         classnames = []
+        template_values = []
         for subc in ParamFile.__subclasses__():
             fpaths.extend(subc.__dict__.get("_filepath", None))
             templates.extend(subc.__dict__.get("_template", None))
+            template_values.extend(subc.__dict__.get("_template_values", None))
             classnames.append(subc.__name__)
         ParamFile.filepath = fpaths
         ParamFile.filepath_exists = [x.exists() for x in fpaths]
         ParamFile.filename = [x.name for x in fpaths]
         ParamFile.folderpath = [x.parent for x in fpaths]
         ParamFile.template = templates
+        ParamFile.template_values = template_values
         ParamFile._classname = classnames
 
     @classmethod
@@ -164,6 +187,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         folderpath: Path = None,
         filepath: Path = None,
         template: dict = None,
+        template_values: dict = None,
     ):
         """Initializes the class file args using either a name/folder or a path.
         Set the filepath for the parameter file. determines the folderpath and filename.
@@ -180,6 +204,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         """
         cls._set_file(filename=filename, folderpath=folderpath, filepath=filepath)
         cls._set_template(template=template)
+        cls._set_template_values(template_values=template_values)
 
     @classmethod
     def _set_file(
@@ -233,6 +258,18 @@ class ParamFile(object, metaclass=MetaParamFile):
 
         cls._classname = cls.__name__
 
+        # Add default values if defined, on read check keys in template and values in defaults
+
+    @classmethod
+    def _set_template_values(cls, template_values: dict = None):
+        if not isinstance(cls.template_values, dict):
+            cls.template_values = {}
+        if template_values is None:
+            template_values = cls.default_template_values
+        else:
+            template_values = {**cls.default_template_values, **template_values}
+        cls.template_values.update(template_values)
+
     @staticmethod
     def read_params_file(key: str = "") -> Union[dict, List[dict]]:
         """Reads all the parameter files that exist on the system.
@@ -280,7 +317,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         """Read Parameter file.
         Base class behavior: Will return the param file if only one param file is found
             among allchildren classes
-        Subclass behavior:Will return
+        Subclass behavior:Will return loaded param file
 
         Args:
             key (str, optional): Return only a specific key. Defaults to None.
@@ -297,6 +334,15 @@ class ParamFile(object, metaclass=MetaParamFile):
 
         with open(cls.filepath, "r") as f:
             pars = json.load(f)
+        # XXX: Check if stored params have all template keys
+        # if they don't add them and save the file
+        if not all([x in pars for x in cls.template]):
+            log.warning(f"{cls.filepath} mismatched keys with template, adding...")
+            # Check for default values
+            # for key in cls.template:
+            #     if key not in pars:
+            #         pars[key] = cls.template[key]
+            cls.write(pars)
 
         if key is None:
             return pars
@@ -304,7 +350,7 @@ class ParamFile(object, metaclass=MetaParamFile):
             return pars[key]
 
     @classmethod
-    def update(cls, new_pars: dict) -> None:
+    def update(cls, new_pars: dict) -> dict:
         """Update Param file with new_pars
 
         Args:
@@ -323,6 +369,7 @@ class ParamFile(object, metaclass=MetaParamFile):
 
         old_pars.update(new_pars)
         cls.write(old_pars)
+        return old_pars
 
     @classmethod
     def backup(cls) -> None:
@@ -354,7 +401,7 @@ class ParamFile(object, metaclass=MetaParamFile):
 
     @classmethod
     def populate(cls):
-        """Populate the params dict (user input required)"""
+        """Populate the stored params dict (user input required)"""
         pars = cls.read()
 
         for k in pars:
@@ -365,11 +412,12 @@ class ParamFile(object, metaclass=MetaParamFile):
 
     @classmethod
     def new_from_template(cls) -> None:
-        """Allows you to create a new param file in the folderpath."""
+        """Allows you to create a new param file with default values in the folderpath."""
         cls.folderpath.mkdir(exist_ok=True)
-
         filepath = cls.filepath
-        template = {k: str(v) for k, v in cls.template.items()}
+        template = cls.template.copy()
+        template.update(cls.template_values)
+        # template = {k: str(v) for k, v in cls.template.items()}
         cls.write(template)
         return filepath
 
@@ -390,9 +438,8 @@ class ParamFile(object, metaclass=MetaParamFile):
         """Validate the current param file against the template
         Returns True if the current param file matches the template
         """
-        template = {k: str(v) for k, v in cls.template.items()}
         current = cls.read()
-        return template == current
+        return cls.template_values == current
 
     @classmethod
     def validate_param_values(cls) -> bool:
@@ -401,6 +448,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         """
         current = cls.read()
         return all([isinstance(current[k], cls.template[k]) for k in cls.template])
+
 
 # TODO: Create decorator to avoid running BaseClass methods that require initialization
 # https://stackoverflow.com/questions/25828864/catch-before-after-function-call-events-for-all-functions-in-class

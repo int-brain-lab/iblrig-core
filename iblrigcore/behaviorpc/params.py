@@ -45,27 +45,34 @@ class BehaviorParamFile(ParamFile):
             "DATA_FOLDER_REMOTE": str,
             "DISPLAY_IDX": int,
         }
+        self.defaults = {
+            "MODALITY": "behavior",
+            "SCREEN_FREQ_TARGET": 60,
+            "DISPLAY_IDX": 1,
+        }
+
         self._init_class(
             filename=self.behavior_fname,
             folderpath=self.behavior_folderpath,
             template=self.behavior_template,
+            defaults=self.defaults,
         )
         # super(EphysParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
     def _get_folderpath(self) -> Path:
+        import platform
+        if platform.uname().node == "pfc":
+            return Path("/home/nico/Projects/IBL/int-brain-lab/iblrig_params")
+        else:
+            return BehaviorParamFile.default_folderpath
         try:
             import iblrig.path_helper as ph
 
             return Path(ph.get_iblrig_params_folder())
         except ModuleNotFoundError:
             log.debug("iblrig not installed, falling back to default params folder")
-            import platform
 
-            if platform.uname().node == "pfc":
-                return Path("/home/nico/Projects/IBL/int-brain-lab/iblrig_params")
-            else:
-                return BehaviorParamFile.default_folderpath
 
 
 # TODO: implement default values and auto updatable values on read/write

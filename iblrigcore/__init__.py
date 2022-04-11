@@ -34,6 +34,9 @@ Default parameter configuration:
     - Validate data files on remote server.
     - Log transfer_status as ended/validated
     - Check create a raw_session.flag to initiate the pipeline
+
+# Cleanup:
+(rigs/computers should have safe maintenance / cleanup logic)
 """
 import iblrigcore.logging_  # noqa
 

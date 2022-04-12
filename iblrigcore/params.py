@@ -6,7 +6,7 @@ import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, List, Union, List
+from typing import List, Union
 
 import iblrigcore  # noqa
 
@@ -19,11 +19,6 @@ class MetaParamFile(type):
         "DATA_FOLDER_LOCAL": str,
         "DATA_FOLDER_REMOTE": str,
     }
-    default_template_values = {
-        "MODALITY": "set_me",
-        "DATA_FOLDER_LOCAL": "set_me",
-        "DATA_FOLDER_REMOTE": "set_me",
-    }
 
     default_filename = f".iblrigcore_params.json"
     default_folderpath = Path().home().joinpath(".iblrigcore")
@@ -33,7 +28,6 @@ class MetaParamFile(type):
     _filename: List[str] = []
     _folderpath: List[Path] = []
     _template: List[dict] = []
-    _template_values: List[dict] = []
     _filepath: List[Path] = []
     _filepath_exists: List[bool] = []
 
@@ -105,12 +99,19 @@ class MetaParamFile(type):
         cls._classname = cls._parse_value(value)
 
     @property
-    def template_values(cls):
-        return cls._get_value(cls._template_values)
+    def template_types(cls):
+        template = cls.template.copy()
+        return {k: (v if isinstance(v, type) else type(v)) for k, v in template.items()}
 
-    @template_values.setter
-    def template_values(cls, value):
-        cls._template_values = cls._parse_value(value)
+    @property
+    def template_values(cls):
+        template = cls.template.copy()
+        return {k: (v.__name__ if isinstance(v, type) else v) for k, v in template.items()}
+
+    @property
+    def template_defaults(cls):
+        template = cls.template.copy()
+        return {k: v for k, v in template.items() if not isinstance(v, type)}
 
     def check_base_class(cls):
         return cls.__name__ == "ParamFile"
@@ -124,6 +125,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         _type_: _description_
     """
 
+    # FIXME: instances don't have properties defined in the MetaClass
     def __init__(self):
         super().__init__()
         ParamFile._update_base_attributes()
@@ -143,7 +145,6 @@ class ParamFile(object, metaclass=MetaParamFile):
         folderpath: Path = None,
         filepath: Path = None,
         template: dict = None,
-        template_values: dict = None,
     ):
         """Guarantees the template filename and filepath class attributes are populated with the
         default values on subclassing. All logic of the Base class uses these attributes so,
@@ -154,7 +155,6 @@ class ParamFile(object, metaclass=MetaParamFile):
             folderpath=folderpath,
             filepath=filepath,
             template=template,
-            template_values=template_values,
         )
 
     @classmethod
@@ -166,19 +166,16 @@ class ParamFile(object, metaclass=MetaParamFile):
         fpaths = []
         templates = []
         classnames = []
-        template_values = []
         for subc in ParamFile.__subclasses__():
             fpaths.extend(subc.__dict__.get("_filepath", None))
             templates.extend(subc.__dict__.get("_template", None))
-            template_values.extend(subc.__dict__.get("_template_values", None))
             classnames.append(subc.__name__)
         ParamFile.filepath = fpaths
         ParamFile.filepath_exists = [x.exists() for x in fpaths]
         ParamFile.filename = [x.name for x in fpaths]
         ParamFile.folderpath = [x.parent for x in fpaths]
         ParamFile.template = templates
-        ParamFile.template_values = template_values
-        ParamFile._classname = classnames
+        ParamFile.classname = classnames
 
     @classmethod
     def _init_class(
@@ -187,7 +184,6 @@ class ParamFile(object, metaclass=MetaParamFile):
         folderpath: Path = None,
         filepath: Path = None,
         template: dict = None,
-        template_values: dict = None,
     ):
         """Initializes the class file args using either a name/folder or a path.
         Set the filepath for the parameter file. determines the folderpath and filename.
@@ -204,7 +200,6 @@ class ParamFile(object, metaclass=MetaParamFile):
         """
         cls._set_file(filename=filename, folderpath=folderpath, filepath=filepath)
         cls._set_template(template=template)
-        cls._set_template_values(template_values=template_values)
 
     @classmethod
     def _set_file(
@@ -260,16 +255,6 @@ class ParamFile(object, metaclass=MetaParamFile):
 
         # Add default values if defined, on read check keys in template and values in defaults
 
-    @classmethod
-    def _set_template_values(cls, template_values: dict = None):
-        if not isinstance(cls.template_values, dict):
-            cls.template_values = {}
-        if template_values is None:
-            template_values = cls.default_template_values
-        else:
-            template_values = {**cls.default_template_values, **template_values}
-        cls.template_values.update(template_values)
-
     @staticmethod
     def read_params_file(key: str = "") -> Union[dict, List[dict]]:
         """Reads all the parameter files that exist on the system.
@@ -303,27 +288,28 @@ class ParamFile(object, metaclass=MetaParamFile):
         """
         # Check necessary keys are in the parmas you want to write
         assert all([x in pars for x in cls.template]), "Invalid params dict"
-        # Create a backup
-        cls.backup()
         # Ensure folder exists
         cls.folderpath.mkdir(exist_ok=True)
+        # Create a backup
+        cls.backup()
         # Write the new params truncating old file
         with open(cls.filepath, "w") as f:
             json.dump(pars, f, indent=2)
         return pars
 
     @classmethod
-    def read(cls, key: str = None) -> Union[dict, Any]:
+    def read(cls, key: str = None) -> Union[dict, object]:
         """Read Parameter file.
         Base class behavior: Will return the param file if only one param file is found
             among allchildren classes
-        Subclass behavior:Will return loaded param file
+        Subclass behavior:Will return loaded param filecheck it against the template
+        and update the file if new template keys are found. Will not delete deprecated keys.
 
         Args:
             key (str, optional): Return only a specific key. Defaults to None.
 
         Returns:
-            Union[dict, Any]: Dict with param values OR value of the requested key
+            Union[dict, object]: Dict with param values OR value of the requested key
         """
         if cls.check_base_class():
             return cls.read_params_file(key=key)
@@ -333,21 +319,18 @@ class ParamFile(object, metaclass=MetaParamFile):
             return
 
         with open(cls.filepath, "r") as f:
-            pars = json.load(f)
-        # XXX: Check if stored params have all template keys
-        # if they don't add them and save the file
-        if not all([x in pars for x in cls.template]):
-            log.warning(f"{cls.filepath} mismatched keys with template, adding...")
-            # Check for default values
-            # for key in cls.template:
-            #     if key not in pars:
-            #         pars[key] = cls.template[key]
-            cls.write(pars)
+            current = json.load(f)
+        # Check if stored params have all template keys ,if they don't add them and save the file
+        if not cls.validate_param_file_keys(current=current):
+            missing = {k: v for k, v in cls.template_values.items() if k not in current}
+            current.update(missing)
+            log.warning(f"{cls.filepath} is missing some template keys, adding...")
+            cls.write(current)
 
         if key is None:
-            return pars
+            return current
         else:
-            return pars[key]
+            return current[key]
 
     @classmethod
     def update(cls, new_pars: dict) -> dict:
@@ -387,6 +370,7 @@ class ParamFile(object, metaclass=MetaParamFile):
             shutil.move(backup_filepath, cls.filepath)
         else:
             log.debug("Cannot restore, backup file not found")
+            raise FileNotFoundError(f"No backup found for {cls.filepath}")
 
     @classmethod
     def delete(cls) -> None:
@@ -395,7 +379,6 @@ class ParamFile(object, metaclass=MetaParamFile):
         if cls.filepath.exists():
             log.debug(f"Deleting {cls.filepath}...")
             cls.filepath.unlink()
-
         else:
             log.debug("ParamFile not found, nothing to delete")
 
@@ -416,7 +399,10 @@ class ParamFile(object, metaclass=MetaParamFile):
         cls.folderpath.mkdir(exist_ok=True)
         filepath = cls.filepath
         template = cls.template.copy()
-        template.update(cls.template_values)
+        # Parse type objects to their name for writing to disk
+        for k in template:
+            if isinstance(template[k], type):
+                template[k] = template[k].__name__
         # template = {k: str(v) for k, v in cls.template.items()}
         cls.write(template)
         return filepath
@@ -434,20 +420,20 @@ class ParamFile(object, metaclass=MetaParamFile):
             cls.populate()
 
     @classmethod
-    def validate(cls) -> bool:
+    def validate_param_file_keys(cls, current: dict = None) -> bool:
         """Validate the current param file against the template
-        Returns True if the current param file matches the template
+        Returns True if the current param file keys match the template keys
         """
-        current = cls.read()
-        return cls.template_values == current
+        current = current or cls.read()
+        return all([k in current for k in cls.template])
 
     @classmethod
-    def validate_param_values(cls) -> bool:
+    def validate_param_file_values(cls, current: dict = None) -> bool:
         """Validate the types of the current param file against the template
         Returns True if the current param file matches the template
         """
-        current = cls.read()
-        return all([isinstance(current[k], cls.template[k]) for k in cls.template])
+        current = current or cls.read()
+        return all([type(v) in cls.template_types.values() for v in current.values()])
 
 
 # TODO: Create decorator to avoid running BaseClass methods that require initialization

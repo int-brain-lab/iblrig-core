@@ -2,12 +2,15 @@
 # @File: test_iblrigcore/test_params.py
 # @Author: Niccolo' Bonacchi (@nbonacchi)
 # @Date: Monday, March 7th 2022, 3:34:32 pm
+from curses import meta
 import json
 from pathlib import Path
 from typing import List
 
+import pytest
+
 import iblrigcore
-from iblrigcore.params import ParamFile
+from iblrigcore.params import MetaParamFile, ParamFile
 
 
 def test_ParamFile_base_class_initialization():
@@ -17,11 +20,7 @@ def test_ParamFile_base_class_initialization():
         "DATA_FOLDER_LOCAL": str,
         "DATA_FOLDER_REMOTE": str,
     }
-    default_template_values = {
-        "MODALITY": "set_me",
-        "DATA_FOLDER_LOCAL": "set_me",
-        "DATA_FOLDER_REMOTE": "set_me",
-    }
+
     default_filename = f".iblrigcore_params.json"
     default_folderpath = Path().home().joinpath(".iblrigcore")
     default_filepath = default_folderpath.joinpath(default_filename)
@@ -32,14 +31,13 @@ def test_ParamFile_base_class_initialization():
     _template: List[dict] = []
     _filepath: List[Path] = []
     _filepath_exists: List[bool] = []
-    _template_values: List[dict] = []
 
     # Test defaults
     assert ParamFile.default_template == default_template
     assert ParamFile.default_filename == default_filename
     assert ParamFile.default_folderpath == default_folderpath
     assert ParamFile.default_filepath == default_filepath
-    assert ParamFile.default_template_values == default_template_values
+
 
 def test_singletons__init__():
 
@@ -54,7 +52,6 @@ def test_singletons__init__():
     assert ParamFile.filename == [x.filename for x in classes]
     assert ParamFile.folderpath == [x.folderpath for x in classes]
     assert ParamFile.template == [x.template for x in classes]
-    assert ParamFile.template_values == [x.template_values for x in classes]
     assert ParamFile.filepath == [x.filepath for x in classes]
     assert ParamFile.filepath_exists == [x.filepath_exists for x in classes]
 
@@ -81,27 +78,28 @@ def test_ParamFile_IO():
     pars = Bla.read()
     assert pars == Bla.template_values
 
-    assert Bla.validate()
-    assert Bla.validate_param_values()
+    assert Bla.validate_param_file_keys()
+    assert Bla.validate_param_file_values()
 
     # Test backup creation
     Bla.backup()
     assert Bla.filepath.parent.joinpath(Bla.filename + ".bak").exists()
 
     # Test write different file and read it back
-    pars["MODALITY"] = "MOVIE"
+    pars["MODALITY"] = "OLD"
     Bla.write(pars)
     assert Bla.read() == pars
 
     # Test update
-    Bla.update({"MODALITY": "BLA"})
+    upars = Bla.update({"MODALITY": "NEW"})
     # Test read key and output of update method
-    assert Bla.read(key="MODALITY") == "BLA"
+    assert Bla.read(key="MODALITY") == "NEW"
+    assert upars == Bla.read()
 
     # Test backup file has previois MODALITY value
     with open(Bla.filepath.parent.joinpath(Bla.filename + ".bak"), "r") as f:
         bkpars = json.load(f)
-    assert bkpars["MODALITY"] == "MOVIE"
+    assert bkpars["MODALITY"] == "OLD"
 
     # Test delete
     Bla.delete()
@@ -112,12 +110,16 @@ def test_ParamFile_IO():
 
     # Test restore
     Bla.restore_from_backup()
-    Bla.read(key="MODALITY") == "MOVIE"
+    assert Bla.read(key="MODALITY") == "NEW"  # Bla.delete will also backup the file
+    # Test restore if bk is not there
+    bkfile = Bla.filepath.parent.joinpath(Bla.filename + ".bak")
+    if bkfile.exists():
+        bkfile.unlink()
+    pytest.raises(FileNotFoundError, Bla.restore_from_backup)
 
     # Test update if no file exists
     Bla.delete()
-    Bla.update({"MODALITY": "BLA"})
-
+    assert Bla.update({"MODALITY": "BLA"}) is None
 
     # test init from filepath
     class Bla(ParamFile):
@@ -125,23 +127,81 @@ def test_ParamFile_IO():
             self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
             self._init_class(filepath=self.flpth)
 
-    bla = Bla()
-    bla.delete()
+    # Class init should not create a file
+    Bla()
+    assert Bla.filename == "bla.json"
+    assert Bla.folderpath == ParamFile.default_folderpath
+    assert Bla.filepath_exists == False
+    Bla.delete()  # should delete nothing
 
-    # Test template values
-    class Bla(ParamFile):
+
+def test_ParamFile_template():
+    # Test template
+    class Bla(ParamFile, metaclass=MetaParamFile):
         def __init__(self, *args, **kwargs):
             self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
-            self.template_values = {"MODALITY": "BLA",
-                                    "EXTRA": "EXTRABLA"}
-            self.template = {"EXTRA": "EXTRABLA"}
-            self._init_class(filepath=self.flpth)
+            self.template = {
+                "MODALITY": "BLA",
+                "EXTRA": 42,
+                "EXTRA2": int
+            }
+            self._init_class(filepath=self.flpth, template=self.template)
             super().__init__(*args, **kwargs)
 
-
     bla = Bla()
+    template = ParamFile.default_template.copy()
+    template.update(bla.template)
+    assert Bla.template == template
+    Bla.create(populate=False)
+    # current params should be the same as Bla.template_values
+    assert Bla.read() == Bla.template_values
+    assert Bla.validate_param_file_keys()
+    assert Bla.validate_param_file_values()
+    assert Bla.template_defaults == {'MODALITY': 'BLA', 'EXTRA': 42}
+    Bla.delete()
+
+def test_read_update_new_template():
+    class Bla(ParamFile, metaclass=MetaParamFile):
+        def __init__(self, *args, **kwargs):
+            self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
+            self.template = {
+                "MODALITY": "BLA",
+                "EXTRA": 42,
+            }
+            self._init_class(filepath=self.flpth, template=self.template)
+            super().__init__(*args, **kwargs)
+    Bla()
+    Bla.create(populate=False)
+    assert Bla.template_values == Bla.read()
+    # Now redifine the class win another extra param in the template
+    class Bla(ParamFile, metaclass=MetaParamFile):
+        def __init__(self, *args, **kwargs):
+            self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
+            self.template = {
+                "MODALITY": "BLA",
+                "EXTRA": 42,
+                "EXTRA2": int
+            }
+            self._init_class(filepath=self.flpth, template=self.template)
+            super().__init__(*args, **kwargs)
+    Bla()
+    # Should stillwork bc on read it should patch the file with the new param
+    assert Bla.template_values == Bla.read()
+    Bla.delete()
+
+
+def test_ParamFile_init_error():
+    class Bla(ParamFile, metaclass=MetaParamFile):
+        def __init__(self, *args, **kwargs):
+            self.filepath = ParamFile.default_folderpath.joinpath("bla.json")
+            self.filename = "some_file.json"
+            self._init_class(filepath=self.filepath, filename=self.filename)
+            super().__init__(*args, **kwargs)
+    pytest.raises(ValueError, Bla)
+
+
 def test_ParamFile_multiple():
-    #TODO: THIS!
+    # TODO: THIS!
     # Implement acquisition PC that has more than one configuration/param file
     # might need to change the ParamFile class to be able to handle multiple
     # chilren params in the same machine.

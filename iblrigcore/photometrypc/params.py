@@ -11,7 +11,7 @@ class PhotometryParamFile(ParamFile):
         self.flnm = ".photometrypc_params.json"
         self.tmplt = {
             "MODALITY": "photometry",
-            "PATCH_CORDS": List,
+            "PATCH_CORDS": list,
             "PHOTOMETRY_DEVICE": str,
         }
         self._init_class(filename=self.flnm, template=self.tmplt)

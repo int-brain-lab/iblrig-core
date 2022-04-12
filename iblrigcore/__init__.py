@@ -37,6 +37,8 @@ Default parameter configuration:
 
 # Cleanup:
 (rigs/computers should have safe maintenance / cleanup logic)
+
+python -m pytest --cov=./iblrigcore --cov-report=html
 """
 import iblrigcore.logging_  # noqa
 

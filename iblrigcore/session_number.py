@@ -36,19 +36,19 @@ using the REMOTE_DATA_FOLDER root path and the current session relative path.
 """
 from iblrigcore.params import ParamFile
 from pathlib import Path
-import datetime
+from datetime import datetime
 from dateutil import parser
 from typing import Tuple, Union
 
 
-def session_path_sort_func(p: Path) -> Tuple[datetime.datetime, int]:
+def session_path_sort_func(p: Path) -> Tuple[datetime, int]:
     """Sort session paths by subject, parsed date, and number
 
     Args:
         p (Path): valid session_path ending in subject/date/number
 
     Returns:
-        Tuple[datetime.datetime, int]: date and number of a session path object
+        Tuple[datetime, int]: date and number of a session path object
     """
     p = Path(p)
     subj = p.parts[-3]
@@ -62,7 +62,8 @@ def session_path_sort_func(p: Path) -> Tuple[datetime.datetime, int]:
 
 
 def is_session_path(p: Path) -> bool:
-    """Check if a path is a valid session path.
+    """Check if a path or a string is a valid session path.
+    Will skip the check for dir if Path does not exist.
     A session path is defined as any folder under the root_folder with the format:
     mousename/date/number.
     No way currently to check if mousename is a valid mouse name without more info
@@ -74,8 +75,9 @@ def is_session_path(p: Path) -> bool:
     Returns:
         bool: True if the path is a valid session path, False otherwise
     """
+    p = Path(p)
     # Must be a directory
-    if not p.is_dir():
+    if p.exists() and not p.is_dir():
         return False
     # Must be a length 3 name composed by base 10 digits
     if not p.parts[-1].isdecimal():
@@ -121,7 +123,7 @@ def list_mouse_sessions(root_folder: Union[str, Path], mousename: str) -> list:
         list: list of session paths sorted by date and number
     """
     root_folder = Path(root_folder)
-    if root_folder.name.lower() == 'Subjects':
+    if root_folder.name.lower() == 'subjects':
         subjects_path = root_folder
     else:
         subjects_path = root_folder.joinpath("Subjects")
@@ -137,3 +139,14 @@ def get_session_number(mousename):
     Or the new session number if no session is running.
     """
     pars = ParamFile.read()
+    sessions_local = list_mouse_sessions(pars["DATA_FOLDER_LOCAL"], mousename)
+    sessions_remote = list_mouse_sessions(pars["DATA_FOLDER_REMOTE"], mousename)
+    all_mouse_sessions = list(set(sessions_local) | set(sessions_remote))
+    all_mouse_sessions.sort(key=session_path_sort_func)
+    latest_session = all_mouse_sessions[-1]
+    if parser.parse(latest_session.parts[-2]).date() < datetime.now().date():
+        return "001"
+    elif parser.parse(latest_session.parts[-2]).date() == datetime.now().date():
+        return str(int(latest_session.parts[-1]) + 1).zfill(3)
+    else:
+        raise ValueError(f"Latest session date is in the future: {latest_session}")

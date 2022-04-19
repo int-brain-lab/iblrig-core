@@ -341,7 +341,7 @@ class ParamFile(object, metaclass=MetaParamFile):
         """
         if not cls.filepath_exists:
             log.error(f"Not found: {cls.filepath} does not exist")
-            return
+            raise FileNotFoundError(f"{cls.filepath} does not exist")
 
         log.debug(f"Updating {cls.filename} with {new_pars}")
         # Possible checks for unupdatable params?

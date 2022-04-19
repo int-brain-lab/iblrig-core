@@ -119,7 +119,7 @@ def test_ParamFile_IO():
 
     # Test update if no file exists
     Bla.delete()
-    assert Bla.update({"MODALITY": "BLA"}) is None
+    pytest.raises(FileNotFoundError, Bla.update({"MODALITY": "BLA"}))
 
     # test init from filepath
     class Bla(ParamFile):

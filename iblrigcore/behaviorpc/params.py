@@ -30,7 +30,7 @@ class BehaviorParamFile(ParamFile):
             "F2TTL_DARK_THRESH": float,
             "F2TTL_LIGHT_THRESH": float,
             "F2TTL_CALIBRATION_DATE": str,
-            "SCREEN_FREQ_TARGET": int,  # (Hz)
+            "SCREEN_FREQ_TARGET": 60,  # (Hz)
             "SCREEN_FREQ_TEST_STATUS": str,
             "SCREEN_FREQ_TEST_DATE": str,
             "SCREEN_LUX_VALUE": float,
@@ -43,11 +43,6 @@ class BehaviorParamFile(ParamFile):
             "BPOD_TTL_TEST_DATE": str,
             "DATA_FOLDER_LOCAL": str,
             "DATA_FOLDER_REMOTE": str,
-            "DISPLAY_IDX": int,
-        }
-        self.defaults = {
-            "MODALITY": "behavior",
-            "SCREEN_FREQ_TARGET": 60,
             "DISPLAY_IDX": 1,
         }
 
@@ -55,7 +50,6 @@ class BehaviorParamFile(ParamFile):
             filename=self.behavior_fname,
             folderpath=self.behavior_folderpath,
             template=self.behavior_template,
-            defaults=self.defaults,
         )
         # super(EphysParamFile, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)

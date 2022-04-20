@@ -119,7 +119,8 @@ def test_ParamFile_IO():
 
     # Test update if no file exists
     Bla.delete()
-    pytest.raises(FileNotFoundError, Bla.update({"MODALITY": "BLA"}))
+    with pytest.raises(FileNotFoundError) as err:
+        Bla.update({"MODALITY": "BLA"})
 
     # test init from filepath
     class Bla(ParamFile):
@@ -140,11 +141,7 @@ def test_ParamFile_template():
     class Bla(ParamFile, metaclass=MetaParamFile):
         def __init__(self, *args, **kwargs):
             self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
-            self.template = {
-                "MODALITY": "BLA",
-                "EXTRA": 42,
-                "EXTRA2": int
-            }
+            self.template = {"MODALITY": "BLA", "EXTRA": 42, "EXTRA2": int}
             self._init_class(filepath=self.flpth, template=self.template)
             super().__init__(*args, **kwargs)
 
@@ -157,8 +154,9 @@ def test_ParamFile_template():
     assert Bla.read() == Bla.template_values
     assert Bla.validate_param_file_keys()
     assert Bla.validate_param_file_values()
-    assert Bla.template_defaults == {'MODALITY': 'BLA', 'EXTRA': 42}
+    assert Bla.template_defaults == {"MODALITY": "BLA", "EXTRA": 42}
     Bla.delete()
+
 
 def test_read_update_new_template():
     class Bla(ParamFile, metaclass=MetaParamFile):
@@ -170,6 +168,7 @@ def test_read_update_new_template():
             }
             self._init_class(filepath=self.flpth, template=self.template)
             super().__init__(*args, **kwargs)
+
     Bla()
     Bla.create(populate=False)
     assert Bla.template_values == Bla.read()
@@ -177,13 +176,10 @@ def test_read_update_new_template():
     class Bla(ParamFile, metaclass=MetaParamFile):
         def __init__(self, *args, **kwargs):
             self.flpth = ParamFile.default_folderpath.joinpath("bla.json")
-            self.template = {
-                "MODALITY": "BLA",
-                "EXTRA": 42,
-                "EXTRA2": int
-            }
+            self.template = {"MODALITY": "BLA", "EXTRA": 42, "EXTRA2": int}
             self._init_class(filepath=self.flpth, template=self.template)
             super().__init__(*args, **kwargs)
+
     Bla()
     # Should stillwork bc on read it should patch the file with the new param
     assert Bla.template_values == Bla.read()
@@ -197,6 +193,7 @@ def test_ParamFile_init_error():
             self.filename = "some_file.json"
             self._init_class(filepath=self.filepath, filename=self.filename)
             super().__init__(*args, **kwargs)
+
     pytest.raises(ValueError, Bla)
 
 

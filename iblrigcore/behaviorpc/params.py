@@ -56,6 +56,7 @@ class BehaviorParamFile(ParamFile):
 
     def _get_folderpath(self) -> Path:
         import platform
+
         if platform.uname().node == "pfc":
             return Path("/home/nico/Projects/IBL/int-brain-lab/iblrig_params")
         else:
@@ -66,7 +67,6 @@ class BehaviorParamFile(ParamFile):
             return Path(ph.get_iblrig_params_folder())
         except ModuleNotFoundError:
             log.debug("iblrig not installed, falling back to default params folder")
-
 
 
 # TODO: implement default values and auto updatable values on read/write

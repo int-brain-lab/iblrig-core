@@ -13,6 +13,9 @@ Default parameter configuration:
     DATA_FOLDER_REMOTE: str
 }
 
+# Sync status (sync_status.py)
+Defines logic for logging acquisition device state to a networked location
+
 # Acquisition:
 (All acquisition startup/shutdown logic is based on a user provided subject name)
 
@@ -40,13 +43,16 @@ Default parameter configuration:
 
 python -m pytest --cov=./iblrigcore --cov-report=html
 """
-import iblrigcore.logging_  # noqa
+# Configure logging
+import iblrigcore.logging_config  # noqa
 
 # Import all bilrigcore params classes to register them in the ParamFile class
 from iblrigcore.params import ParamFile  # noqa
 from iblrigcore.videopc.params import VideoParamFile
 from iblrigcore.ephyspc.params import EphysParamFile
 from iblrigcore.photometrypc.params import PhotometryParamFile
+from iblrigcore.behaviorpc.params import BehaviorParamFile
+
 # from iblrigcore.behaviorpc.params import BehaviorParamFile
 
 # Initialize all classes

@@ -6,7 +6,7 @@ import json
 import logging
 import shutil
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Type
 
 import iblrigcore  # noqa
 
@@ -30,25 +30,6 @@ class MetaParamFile(type):
     _template: List[dict] = []
     _filepath: List[Path] = []
     _filepath_exists: List[bool] = []
-
-    def __call__(cls, *args, **kwargs):
-        obj = type.__call__(cls, *args, **kwargs)
-        obj.__post_init__(cls, *args, **kwargs)
-        return obj
-
-    @staticmethod
-    def _get_value(clsvar):
-        if len(clsvar) == 1:
-            return clsvar[0]
-        else:
-            return clsvar
-
-    @staticmethod
-    def _parse_value(value):
-        if not isinstance(value, list):
-            return [value]
-        else:
-            return value
 
     @property
     def filepath(cls):
@@ -113,6 +94,25 @@ class MetaParamFile(type):
         template = cls.template.copy()
         return {k: v for k, v in template.items() if not isinstance(v, type)}
 
+    def __call__(cls, *args, **kwargs):
+        obj = type.__call__(cls, *args, **kwargs)
+        obj.__post_init__(cls, *args, **kwargs)
+        return obj
+
+    @staticmethod
+    def _get_value(clsvar):
+        if len(clsvar) == 1:
+            return clsvar[0]
+        else:
+            return clsvar
+
+    @staticmethod
+    def _parse_value(value):
+        if not isinstance(value, list):
+            return [value]
+        else:
+            return value
+
     def check_base_class(cls):
         return cls.__name__ == "ParamFile"
 
@@ -124,6 +124,10 @@ class ParamFile(object, metaclass=MetaParamFile):
     Returns:
         _type_: _description_
     """
+
+    # def __new__(cls: Type[Self]) -> Self:
+    #     cls._update_base_attributes()
+    #     return cls.__new__(cls)
 
     # FIXME: instances don't have properties defined in the MetaClass
     def __init__(self):
@@ -157,8 +161,8 @@ class ParamFile(object, metaclass=MetaParamFile):
             template=template,
         )
 
-    @classmethod
-    def _update_base_attributes(cls) -> None:
+    @staticmethod
+    def _update_base_attributes() -> None:
         """Finds the existing filepaths and templates of any ParamFile children.
         Sets the base class attributes based on the existing subclass attributes.
         """

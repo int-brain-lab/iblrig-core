@@ -17,7 +17,7 @@ log = logging.getLogger("iblrig")
 
 def modality() -> str:
     """return the name of the modality"""
-    out = ParamFile.read(key='MODALITY')
+    out = ParamFile.read(key="MODALITY")
     if out is None:
         log.error("MODALITY is not defined in the params file")
         raise ValueError("MODALITY is not defined in the params file")

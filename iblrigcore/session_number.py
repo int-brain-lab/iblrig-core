@@ -123,7 +123,7 @@ def list_mouse_sessions(root_folder: Union[str, Path], mousename: str) -> list:
         list: list of session paths sorted by date and number
     """
     root_folder = Path(root_folder)
-    if root_folder.name.lower() == 'subjects':
+    if root_folder.name.lower() == "subjects":
         subjects_path = root_folder
     else:
         subjects_path = root_folder.joinpath("Subjects")
@@ -150,3 +150,32 @@ def get_session_number(mousename):
         return str(int(latest_session.parts[-1]) + 1).zfill(3)
     else:
         raise ValueError(f"Latest session date is in the future: {latest_session}")
+
+
+def new_session_paths(mousename: str, date: datetime, number: int) -> Tuple[Path, Path]:
+    """Create the paths for a new session.
+
+    Args:
+        mousename (str): mouse name
+        date (datetime): date of the session
+        number (int): number of the session
+
+    Returns:
+        Tuple[Path, Path]: local and remote paths for the new session
+    """
+    pars = ParamFile.read()
+    # Create the local session path
+    local_session_path = (
+        Path(pars["DATA_FOLDER_LOCAL"])
+        .joinpath(mousename)
+        .joinpath(date.strftime("%Y_%m_%d"))
+        .joinpath(str(number).zfill(3))
+    )
+    # Create the remote session path
+    remote_session_path = (
+        Path(pars["DATA_FOLDER_REMOTE"])
+        .joinpath(mousename)
+        .joinpath(date.strftime("%Y_%m_%d"))
+        .joinpath(str(number).zfill(3))
+    )
+    return local_session_path, remote_session_path

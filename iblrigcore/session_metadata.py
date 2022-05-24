@@ -11,9 +11,7 @@ from traceback import print_stack
 from iblrigcore.params import ParamFile
 
 log = logging.getLogger("iblrig")
-PARAMS_FILE_PATH = Path().home().joinpath(".iblrigcore_params.json")
-
-
+PARAMS_FILE_PATH = ParamFile.filepath
 
 
 def parameter_file_locator(file_path=PARAMS_FILE_PATH):
@@ -30,13 +28,12 @@ def parameter_file_locator(file_path=PARAMS_FILE_PATH):
     str of the path to the .iblrigcore_params.json file
 
     """
-    file_exists = os.path.exists(file_path)
-    if file_exists:
+    if os.path.exists(file_path):
         return file_path
     else:
-        logging.debug('Could not find the .iblrigcore_params.json file.')
+        log.debug('Could not find the .iblrigcore_params.json file.')
         print_stack()
-        exit()  # or assume suitable defaults?
+        exit(1)  # or assume suitable defaults?
 
 
 def determine_session_number(subject_folder_local="C:\\iblrig_data\\Subjects",
